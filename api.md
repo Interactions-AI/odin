@@ -30,7 +30,7 @@ There is a CLI for authentication yielding a JWT token, though commands support 
 This command uses the username on the local machine as the default username
 
 ```
-(raven-nlu) dpressel@dpressel:~/dev/work/raven/ml/src/odin$ odin-auth
+$ odin-auth
 odin password: ********                                                                                                                      
 eyJ0eX...J9.eyJp..._8
 ```
@@ -139,12 +139,12 @@ curl -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" --r
 A `Job` is a Directed Acyclic Graph (DAG) of compute `Task`s. It is defined on the server by a `main.yml` inside a directory with the same name as the `Job`, along with any auxiliary files that are required for each `Task` of processing. On the filesystem, a pipeline directory might look like this:
 
 ```
-(tf) dpressel@dpressel:~/dev/work/raven/ml$ ls -l /data/jobs/sst2
+$ ls -l /data/jobs/sst2
 total 12
 -rw-r--r-- 1 dpressel dpressel 225 Aug  9 15:41 after.yml
 -rw-r--r-- 1 dpressel dpressel 978 Jun 18 10:21 main.yml
 -rw-r--r-- 1 dpressel dpressel 495 Jun 18 10:21 sst2.yml
-(tf) dpressel@dpressel:~/dev/work/raven/ml$
+$
 
 ```
 
