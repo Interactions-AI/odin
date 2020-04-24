@@ -269,26 +269,26 @@ curl -X GET http://0.0.0.0:9003/v1/jobs?q=pj-int
     {
       "configs": [
         {
-          "content": "task: classify\nbasedir: pj-intent\nbackend: tensorflow\ndataset: pj:intent:word\nunif: 0.25\n\nfeatures:\n - name: word\n   vectorizer:\n     type: token1d\n     transform: baseline.lowercase\n     mxlen: 100\n   embeddings:\n     label: w2v-gn\nloader:\n  reader_type: default\n\nmodel:\n  model_type: composite\n  sub: [ConvModel, NBowMaxModel, NBowModel]\n  filtsz: [2,3,4,5,6]\n  cmotsz: 100\n  dropout: 0.5\n\ntrain:\n  batchsz: 50\n  epochs: 60\n  patience: 20\n  decay_type: invtime\n  decay_lr: 0.05\n  optim: adam\n  eta: 0.001\n  early_stopping_metric: acc\n  verbose:\n    console: false\n    file: intents-2-1.csv\n\nexport:\n output_dir: /data/nest/models\n project: pj\n name: intent\n",
-          "id": "/data/pipelines/pj-intent/pj-intents-comp-v1.yml",
-          "name": "pj-intents-comp-v1.yml"
+          "content": "task: classify\nbasedir: intent\nbackend: tensorflow\ndataset: pj:intent:word\nunif: 0.25\n\nfeatures:\n - name: word\n   vectorizer:\n     type: token1d\n     transform: baseline.lowercase\n     mxlen: 100\n   embeddings:\n     label: w2v-gn\nloader:\n  reader_type: default\n\nmodel:\n  model_type: composite\n  sub: [ConvModel, NBowMaxModel, NBowModel]\n  filtsz: [2,3,4,5,6]\n  cmotsz: 100\n  dropout: 0.5\n\ntrain:\n  batchsz: 50\n  epochs: 60\n  patience: 20\n  decay_type: invtime\n  decay_lr: 0.05\n  optim: adam\n  eta: 0.001\n  early_stopping_metric: acc\n  verbose:\n    console: false\n    file: intents-2-1.csv\n\nexport:\n output_dir: /data/nest/models\n project: pj\n name: intent\n",
+          "id": "/data/pipelines/intent/intents-comp-v1.yml",
+          "name": "intents-comp-v1.yml"
         },
         {
           "content": "# This is a slightly weird placement because yaml can only use a reference if\n# the anchor comes before it\n\nchores:\n- name: slack\n  type: slack-message\n  parent_details: ^parent\n  webhook: https://hooks.slack.com/services/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\n  template: \"Pipeline ${label} completed.  Executed ${executed}\"\n",
-          "id": "/data/pipelines/pj-intent/chores.yml",
+          "id": "/data/pipelines/intent/chores.yml",
           "name": "chores.yml"
         }
       ],
-      "id": "pj-intent",
-      "location": "/data/pipelines/pj-intent/main.yml",
-      "name": "pj-intent",
+      "id": "intent",
+      "location": "/data/pipelines/intent/main.yml",
+      "name": "intent",
       "tasks": [
         {
           "args": [
             "--basedir",
             "${RUN_PATH}/${TASK_ID}",
             "--config",
-            "${WORK_PATH}/pj-intents-comp-v1.yml",
+            "${WORK_PATH}/intents-comp-v1.yml",
             "--datasets",
             "${ROOT_PATH}/datasets.yml",
             "--embeddings",
@@ -356,7 +356,7 @@ curl -X GET http://0.0.0.0:9003/v1/jobs?q=pj-int
           ],
           "command": "odin-chores",
           "depends": "export",
-          "id": "pj-intent--chores",
+          "id": "intent--chores",
           "image": "interactions/odin-ml:latest",
           "mounts": {
             "claim": "data-rw-many",
