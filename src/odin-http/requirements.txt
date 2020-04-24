@@ -1,0 +1,15 @@
+werkzeug == 0.16.0
+connexion == 2.2.0
+python_dateutil >= 2.6.0
+setuptools >= 21.0.0
+websockets
+numpy
+pyyaml >= 5.1
+GitPython
+requests
+kubernetes
+requests-async
+python-jose
+bcrypt
+SQLAlchemy
+psycopg2-binary

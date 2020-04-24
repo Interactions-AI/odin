@@ -1,0 +1,36 @@
+# Python 3.6
+FROM python:3.6.4-stretch
+
+# Setup Env
+RUN python3.6 -m pip install --upgrade pip
+
+# Copy over all the odin code
+WORKDIR /usr/odin
+COPY setup.py ./setup.py
+COPY odin/version.py ./odin/version.py
+COPY . .
+
+# Install Odin
+RUN python3.6 -m pip install .
+
+# Install baseline
+ADD https://github.com/dpressel/mead-baseline/archive/feature/v2.tar.gz /usr/odin/mead-baseline-feature-v2.tar.gz
+RUN tar xzf mead-baseline-feature-v2.tar.gz && \
+    cd ./mead-baseline-feature-v2/layers && \
+    pip install -e . && \
+    cd .. && \
+    pip install -e .[test,yaml]
+
+# Install xpctl
+ADD https://github.com/mead-ml/xpctl/archive/master.tar.gz /usr/odin/xpctl-master.tar.gz
+RUN tar xzf xpctl-master.tar.gz && \
+    cd ./xpctl-master/ && \
+    pip install -e .
+
+# Install hpctl
+ADD https://github.com/mead-ml/hpctl/archive/master.tar.gz /usr/odin/hpctl-master.tar.gz
+RUN tar xzf hpctl-master.tar.gz && \
+    cd ./hpctl-master/ && \
+    pip install -e .
+
+ENTRYPOINT ["/bin/bash"]

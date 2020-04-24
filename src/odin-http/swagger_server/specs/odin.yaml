@@ -1,0 +1,1372 @@
+openapi: 3.0.1
+info:
+  title: odin API
+  description: This spec defines the odin API, which is used to communicate with the
+    odin server.
+  termsOfService: http://swagger.io/terms/
+  contact:
+    email: odin@interactions.com
+  license:
+    name: Interactions
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 0.0.1
+servers:
+- url: https://dev-null.io/v1
+- url: http://dev-null.io/v1
+tags:
+- name: odin
+  description: odin API definition
+  externalDocs:
+    description: odin API definition
+    url: https://dev-null.io
+paths:
+  /users:
+    get:
+      tags:
+      - odin
+      summary: Get user info
+      operationId: get_users
+      parameters:
+      - name: q
+        in: query
+        description: Get users
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Provide back users
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResults'
+      x-openapi-router-controller: swagger_server.controllers.odin_controller
+    post:
+      tags:
+      - odin
+      summary: Create a user
+      operationId: create_user
+      requestBody:
+        description: A user definition
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserWrapperDefinition'
+        required: true
+      responses:
+        200:
+          description: Give back the user definition
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserWrapperDefinition'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - odinAuth: []
+      x-openapi-router-controller: swagger_server.controllers.odin_controller
+  /users/{id}:
+    get:
+      tags:
+      - odin
+      summary: Get a user
+      operationId: get_user
+      parameters:
+      - name: id
+        in: path
+        description: ID of a user
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: Provide back a User
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserWrapperDefinition'
+      x-openapi-router-controller: swagger_server.controllers.odin_controller
+    put:
+      tags:
+      - odin
+      summary: Update a User
+      operationId: update_user
+      parameters:
+      - name: id
+        in: path
+        description: Username
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      requestBody:
+        description: A User definition
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserDefinition'
+        required: true
+      responses:
+        200:
+          description: Provide back a user definition
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserWrapperDefinition'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - odinAuth: []
+      x-openapi-router-controller: swagger_server.controllers.odin_controller
+    delete:
+      tags:
+      - odin
+      summary: Delete a user
+      operationId: delete_user
+      parameters:
+      - name: id
+        in: path
+        description: User ID
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: Remove a user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserWrapperDefinition'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - odinAuth: []
+      x-openapi-router-controller: swagger_server.controllers.odin_controller
+  /auth:
+    post:
+      tags:
+      - odin
+      summary: Return JWT token
+      operationId: generate_token
+      requestBody:
+        description: An Auth definition
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthDefinition'
+        required: true
+      responses:
+        200:
+          description: Provide back a JWT token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponseDefinition'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-openapi-router-controller: swagger_server.controllers.odin_controller
+  /nodes:
+    get:
+      tags:
+      - odin
+      summary: Get info for all nodes
+      operationId: get_node_info
+      parameters:
+      - name: q
+        in: query
+        description: Get node info by partial match
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Provide back node infos
+          content:
+            application/json:
+              schema:
+                type: string
+                format: string
+                x-content-type: application/json
+      x-openapi-router-controller: swagger_server.controllers.odin_controller
+  /pipelines:
+    get:
+      tags:
+      - odin
+      summary: Get pipeline info
+      operationId: get_pipelines
+      parameters:
+      - name: q
+        in: query
+        description: Get jobs by partial name match
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Provide back pipeline statuses
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PipelineResults'
+      x-openapi-router-controller: swagger_server.controllers.odin_controller
+    post:
+      tags:
+      - odin
+      summary: Run a pipeline
+      operationId: create_pipeline
+      requestBody:
+        description: A Pipeline definition (really just the job name)
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PipelineWrapperDefinition'
+        required: true
+      responses:
+        200:
+          description: Provide back a populate pipeline definition
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PipelineWrapperDefinition'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - odinAuth: []
+      x-openapi-router-controller: swagger_server.controllers.odin_controller
+  /pipelines/{id}:
+    get:
+      tags:
+      - odin
+      summary: Get a Pipeline Status
+      operationId: get_pipeline
+      parameters:
+      - name: id
+        in: path
+        description: ID of Pipeline
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: Provide back a Pipeline Status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PipelineWrapperDefinition'
+      x-openapi-router-controller: swagger_server.controllers.odin_controller
+    delete:
+      tags:
+      - odin
+      summary: Delete a Pipeline
+      operationId: cleanup_pipeline
+      parameters:
+      - name: id
+        in: path
+        description: ID of Pipeline
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: db
+        in: query
+        description: Delete the database entry for the pipeline too.
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: boolean
+      - name: fs
+        in: query
+        description: Delete the filesystem artifact for the pipeline too.
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: boolean
+      responses:
+        200:
+          description: Remove a Pipeline
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PipelineCleanupResults'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - odinAuth: []
+      x-openapi-router-controller: swagger_server.controllers.odin_controller
+  /resources/{id}/events:
+    get:
+      tags:
+      - odin
+      summary: Get resource events
+      operationId: get_events
+      parameters:
+      - name: id
+        in: path
+        description: ID of resource
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: Give back a list of events
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventResults'
+      x-openapi-router-controller: swagger_server.controllers.odin_controller
+  /resources/{id}/data:
+    get:
+      tags:
+      - odin
+      summary: Get resource data
+      description: |
+        Get resource data
+      operationId: get_resource_data
+      parameters:
+      - name: id
+        in: path
+        description: resource ID
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: Provide back data for a resource
+          content:
+            application/json:
+              schema:
+                type: string
+                format: string
+                x-content-type: application/json
+      x-openapi-router-controller: swagger_server.controllers.odin_controller
+  /jobs:
+    get:
+      tags:
+      - odin
+      summary: Get Job chain info
+      operationId: get_jobs
+      parameters:
+      - name: q
+        in: query
+        description: Get Jobs by partial name match
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Provide back a pipeline definition
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobResults'
+      x-openapi-router-controller: swagger_server.controllers.odin_controller
+    post:
+      tags:
+      - odin
+      summary: Create a job definition
+      operationId: create_job
+      requestBody:
+        description: A Job definition
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobWrapperDefinition'
+        required: true
+      responses:
+        200:
+          description: Provide back a job definition
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobWrapperDefinition'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - odinAuth: []
+      x-openapi-router-controller: swagger_server.controllers.odin_controller
+  /jobs/{id}:
+    get:
+      tags:
+      - odin
+      summary: Get Job
+      operationId: get_job
+      parameters:
+      - name: id
+        in: path
+        description: Get Job for an ID
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: Provide back a Job definition
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobWrapperDefinition'
+      x-openapi-router-controller: swagger_server.controllers.odin_controller
+    put:
+      tags:
+      - odin
+      summary: Create a Job definition
+      operationId: update_job
+      parameters:
+      - name: id
+        in: path
+        description: Job ID
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      requestBody:
+        description: A Job definition
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobDefinition'
+        required: true
+      responses:
+        200:
+          description: Provide back a job definition
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobWrapperDefinition'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - odinAuth: []
+      x-openapi-router-controller: swagger_server.controllers.odin_controller
+  /jobs/{id}/files/{filename}:
+    get:
+      tags:
+      - odin
+      summary: Get a file required for a Job
+      description: |
+        Get a file from the server that is used for a pipeline
+      operationId: download_job_file
+      parameters:
+      - name: id
+        in: path
+        description: job ID
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: filename
+        in: path
+        description: A basename to use on the server
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: Provide back a Job definition
+          content:
+            text/plain:
+              schema:
+                type: string
+                format: string
+                x-content-type: text/plain
+      x-openapi-router-controller: swagger_server.controllers.odin_controller
+    post:
+      tags:
+      - odin
+      summary: Upload a file required for a Job
+      description: "Uploads a file needed for a pipeline step.   Puts the file to\
+        \ the pipeline location.   If the file already exists, it will be overwritten\
+        \  \n"
+      operationId: upload_job_file
+      parameters:
+      - name: id
+        in: path
+        description: Job ID
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: filename
+        in: path
+        description: A basename to use on the server
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      requestBody:
+        description: A config file
+        content:
+          text/plain:
+            schema:
+              type: string
+              format: string
+      responses:
+        200:
+          description: Provide back a Job definition
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadDefinition'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - odinAuth: []
+      x-openapi-router-controller: swagger_server.controllers.odin_controller
+components:
+  schemas:
+    AuthDefinition:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+    AuthResponseDefinition:
+      type: object
+      properties:
+        message:
+          type: string
+      example:
+        message: message
+    EventDefinition:
+      type: object
+      properties:
+        id:
+          type: string
+        eventType:
+          type: string
+        reason:
+          type: string
+        source:
+          type: string
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+      description: An event that occurred
+      example:
+        reason: reason
+        id: id
+        eventType: eventType
+        source: source
+        message: message
+        timestamp: {}
+    EventResults:
+      type: object
+      properties:
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventDefinition'
+      description: Wraps an EventDefinition list
+      example:
+        events:
+        - reason: reason
+          id: id
+          eventType: eventType
+          source: source
+          message: message
+          timestamp: {}
+        - reason: reason
+          id: id
+          eventType: eventType
+          source: source
+          message: message
+          timestamp: {}
+    JobResults:
+      type: object
+      properties:
+        jobs:
+          type: array
+          items:
+            $ref: '#/components/schemas/JobDefinition'
+      description: Wraps an JobDefinition list
+      example:
+        jobs:
+        - configs:
+          - name: name
+            id: id
+            content: content
+          - name: name
+            id: id
+            content: content
+          creationTime: {}
+          name: name
+          location: location
+          id: id
+          tasks:
+          - outputs:
+            - outputs
+            - outputs
+            image: image
+            depends:
+            - depends
+            - depends
+            inputs:
+            - inputs
+            - inputs
+            mounts:
+            - path: path
+              name: name
+              claim: claim
+            - path: path
+              name: name
+              claim: claim
+            pullPolicy: pullPolicy
+            command: command
+            nodeSelector:
+            - value: value
+              key: key
+            - value: value
+              key: key
+            args:
+            - args
+            - args
+            name: name
+            numWorkers: 6
+            id: id
+            numGpus: 0
+            resourceType: Pod
+          - outputs:
+            - outputs
+            - outputs
+            image: image
+            depends:
+            - depends
+            - depends
+            inputs:
+            - inputs
+            - inputs
+            mounts:
+            - path: path
+              name: name
+              claim: claim
+            - path: path
+              name: name
+              claim: claim
+            pullPolicy: pullPolicy
+            command: command
+            nodeSelector:
+            - value: value
+              key: key
+            - value: value
+              key: key
+            args:
+            - args
+            - args
+            name: name
+            numWorkers: 6
+            id: id
+            numGpus: 0
+            resourceType: Pod
+        - configs:
+          - name: name
+            id: id
+            content: content
+          - name: name
+            id: id
+            content: content
+          creationTime: {}
+          name: name
+          location: location
+          id: id
+          tasks:
+          - outputs:
+            - outputs
+            - outputs
+            image: image
+            depends:
+            - depends
+            - depends
+            inputs:
+            - inputs
+            - inputs
+            mounts:
+            - path: path
+              name: name
+              claim: claim
+            - path: path
+              name: name
+              claim: claim
+            pullPolicy: pullPolicy
+            command: command
+            nodeSelector:
+            - value: value
+              key: key
+            - value: value
+              key: key
+            args:
+            - args
+            - args
+            name: name
+            numWorkers: 6
+            id: id
+            numGpus: 0
+            resourceType: Pod
+          - outputs:
+            - outputs
+            - outputs
+            image: image
+            depends:
+            - depends
+            - depends
+            inputs:
+            - inputs
+            - inputs
+            mounts:
+            - path: path
+              name: name
+              claim: claim
+            - path: path
+              name: name
+              claim: claim
+            pullPolicy: pullPolicy
+            command: command
+            nodeSelector:
+            - value: value
+              key: key
+            - value: value
+              key: key
+            args:
+            - args
+            - args
+            name: name
+            numWorkers: 6
+            id: id
+            numGpus: 0
+            resourceType: Pod
+    JobWrapperDefinition:
+      type: object
+      properties:
+        job:
+          $ref: '#/components/schemas/JobDefinition'
+      description: Wraps an JobDefinition
+      example:
+        job:
+          configs:
+          - name: name
+            id: id
+            content: content
+          - name: name
+            id: id
+            content: content
+          creationTime: {}
+          name: name
+          location: location
+          id: id
+          tasks:
+          - outputs:
+            - outputs
+            - outputs
+            image: image
+            depends:
+            - depends
+            - depends
+            inputs:
+            - inputs
+            - inputs
+            mounts:
+            - path: path
+              name: name
+              claim: claim
+            - path: path
+              name: name
+              claim: claim
+            pullPolicy: pullPolicy
+            command: command
+            nodeSelector:
+            - value: value
+              key: key
+            - value: value
+              key: key
+            args:
+            - args
+            - args
+            name: name
+            numWorkers: 6
+            id: id
+            numGpus: 0
+            resourceType: Pod
+          - outputs:
+            - outputs
+            - outputs
+            image: image
+            depends:
+            - depends
+            - depends
+            inputs:
+            - inputs
+            - inputs
+            mounts:
+            - path: path
+              name: name
+              claim: claim
+            - path: path
+              name: name
+              claim: claim
+            pullPolicy: pullPolicy
+            command: command
+            nodeSelector:
+            - value: value
+              key: key
+            - value: value
+              key: key
+            args:
+            - args
+            - args
+            name: name
+            numWorkers: 6
+            id: id
+            numGpus: 0
+            resourceType: Pod
+    PipelineWrapperDefinition:
+      type: object
+      properties:
+        pipeline:
+          $ref: '#/components/schemas/PipelineDefinition'
+      description: Wraps a PipelineDefinition
+      example:
+        pipeline:
+          completionTime: {}
+          submitTime: {}
+          name: name
+          id: id
+          job: job
+          message: message
+          version: version
+          tasks:
+          - image: image
+            completionTime: {}
+            resourceId: resourceId
+            task: task
+            submitTime: {}
+            name: name
+            id: id
+            command: command
+            events:
+            - reason: reason
+              id: id
+              eventType: eventType
+              source: source
+              message: message
+              timestamp: {}
+            - reason: reason
+              id: id
+              eventType: eventType
+              source: source
+              message: message
+              timestamp: {}
+            status: status
+            resourceType: resourceType
+          - image: image
+            completionTime: {}
+            resourceId: resourceId
+            task: task
+            submitTime: {}
+            name: name
+            id: id
+            command: command
+            events:
+            - reason: reason
+              id: id
+              eventType: eventType
+              source: source
+              message: message
+              timestamp: {}
+            - reason: reason
+              id: id
+              eventType: eventType
+              source: source
+              message: message
+              timestamp: {}
+            status: status
+            resourceType: resourceType
+          status: status
+    PipelineResults:
+      type: object
+      properties:
+        pipelines:
+          type: array
+          items:
+            $ref: '#/components/schemas/PipelineDefinition'
+      description: Wraps an PipelineDefinition list
+      example:
+        pipelines:
+        - completionTime: {}
+          submitTime: {}
+          name: name
+          id: id
+          job: job
+          message: message
+          version: version
+          tasks:
+          - image: image
+            completionTime: {}
+            resourceId: resourceId
+            task: task
+            submitTime: {}
+            name: name
+            id: id
+            command: command
+            events:
+            - reason: reason
+              id: id
+              eventType: eventType
+              source: source
+              message: message
+              timestamp: {}
+            - reason: reason
+              id: id
+              eventType: eventType
+              source: source
+              message: message
+              timestamp: {}
+            status: status
+            resourceType: resourceType
+          - image: image
+            completionTime: {}
+            resourceId: resourceId
+            task: task
+            submitTime: {}
+            name: name
+            id: id
+            command: command
+            events:
+            - reason: reason
+              id: id
+              eventType: eventType
+              source: source
+              message: message
+              timestamp: {}
+            - reason: reason
+              id: id
+              eventType: eventType
+              source: source
+              message: message
+              timestamp: {}
+            status: status
+            resourceType: resourceType
+          status: status
+        - completionTime: {}
+          submitTime: {}
+          name: name
+          id: id
+          job: job
+          message: message
+          version: version
+          tasks:
+          - image: image
+            completionTime: {}
+            resourceId: resourceId
+            task: task
+            submitTime: {}
+            name: name
+            id: id
+            command: command
+            events:
+            - reason: reason
+              id: id
+              eventType: eventType
+              source: source
+              message: message
+              timestamp: {}
+            - reason: reason
+              id: id
+              eventType: eventType
+              source: source
+              message: message
+              timestamp: {}
+            status: status
+            resourceType: resourceType
+          - image: image
+            completionTime: {}
+            resourceId: resourceId
+            task: task
+            submitTime: {}
+            name: name
+            id: id
+            command: command
+            events:
+            - reason: reason
+              id: id
+              eventType: eventType
+              source: source
+              message: message
+              timestamp: {}
+            - reason: reason
+              id: id
+              eventType: eventType
+              source: source
+              message: message
+              timestamp: {}
+            status: status
+            resourceType: resourceType
+          status: status
+    PipelineCleanupResults:
+      type: object
+      properties:
+        cleanups:
+          type: array
+          items:
+            $ref: '#/components/schemas/PipelineCleanupDefinition'
+      description: Wraps an PipelineDefinition list
+      example:
+        cleanups:
+        - removedFromFs: true
+          cleanedFromK8s: true
+          taskId: taskId
+          purgedFromDb: true
+        - removedFromFs: true
+          cleanedFromK8s: true
+          taskId: taskId
+          purgedFromDb: true
+    UploadDefinition:
+      type: object
+      properties:
+        bytes:
+          type: integer
+        location:
+          type: string
+      description: Describes information about the upload
+      example:
+        bytes: 0
+        location: location
+    PipelineCleanupDefinition:
+      type: object
+      properties:
+        taskId:
+          type: string
+        cleanedFromK8s:
+          type: boolean
+        purgedFromDb:
+          type: boolean
+        removedFromFs:
+          type: boolean
+      description: Defines the actions that were performed when job cleanup is completed
+      example:
+        removedFromFs: true
+        cleanedFromK8s: true
+        taskId: taskId
+        purgedFromDb: true
+    VolumeMountDefinition:
+      type: object
+      properties:
+        path:
+          type: string
+        name:
+          type: string
+        claim:
+          type: string
+      description: Defines the volumes that the pipeline step will need to mount
+      example:
+        path: path
+        name: name
+        claim: claim
+    KeyValueDefinition:
+      type: object
+      properties:
+        key:
+          type: string
+        value:
+          type: string
+      description: Describes a string-string key-value pair
+      example:
+        value: value
+        key: key
+    TaskDefinition:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        image:
+          type: string
+        command:
+          type: string
+        args:
+          type: array
+          items:
+            type: string
+        mounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/VolumeMountDefinition'
+        numGpus:
+          type: integer
+        pullPolicy:
+          type: string
+        nodeSelector:
+          type: array
+          items:
+            $ref: '#/components/schemas/KeyValueDefinition'
+        resourceType:
+          type: string
+          enum:
+          - Pod
+          - Job
+          - TFJob
+          - PyTorchJob
+          - MPIJob
+        numWorkers:
+          type: integer
+        depends:
+          type: array
+          items:
+            type: string
+        inputs:
+          type: array
+          items:
+            type: string
+        outputs:
+          type: array
+          items:
+            type: string
+      description: The step definition describes a step in the processing pipeline
+      example:
+        outputs:
+        - outputs
+        - outputs
+        image: image
+        depends:
+        - depends
+        - depends
+        inputs:
+        - inputs
+        - inputs
+        mounts:
+        - path: path
+          name: name
+          claim: claim
+        - path: path
+          name: name
+          claim: claim
+        pullPolicy: pullPolicy
+        command: command
+        nodeSelector:
+        - value: value
+          key: key
+        - value: value
+          key: key
+        args:
+        - args
+        - args
+        name: name
+        numWorkers: 6
+        id: id
+        numGpus: 0
+        resourceType: Pod
+    JobDefinition:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        location:
+          type: string
+        creationTime:
+          type: string
+          format: date-time
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaskDefinition'
+        configs:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConfigDefinition'
+      description: The Job definition defines a processing graph
+    Error:
+      required:
+      - code
+      - message
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+    ConfigDefinition:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          format: file
+        content:
+          type: string
+      example:
+        name: name
+        id: id
+        content: content
+    TaskStatusDefinition:
+      type: object
+      properties:
+        id:
+          type: string
+        task:
+          type: string
+        name:
+          type: string
+        status:
+          type: string
+        command:
+          type: string
+        image:
+          type: string
+        resourceType:
+          type: string
+        resourceId:
+          type: string
+        submitTime:
+          type: string
+          format: date-time
+        completionTime:
+          type: string
+          format: date-time
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventDefinition'
+    UserDefinition:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+        firstname:
+          type: string
+        lastname:
+          type: string
+      example:
+        password: password
+        username: username
+    UserWrapperDefinition:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/UserDefinition'
+      description: Wraps an UserDefinition
+      example: {}
+    UserResults:
+      type: object
+      properties:
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserDefinition'
+      description: Wraps an UserDefinition list
+      example:
+        users:
+        - password: password
+          username: username
+        - password: password
+          username: username
+    PipelineDefinition:
+      type: object
+      properties:
+        id:
+          type: string
+        job:
+          type: string
+        version:
+          type: string
+          nullable: true
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaskStatusDefinition'
+        name:
+          type: string
+          nullable: true
+        status:
+          type: string
+          nullable: true
+        message:
+          type: string
+          nullable: true
+        submitTime:
+          type: string
+          format: date-time
+          nullable: true
+        completionTime:
+          type: string
+          format: date-time
+          nullable: true
+  securitySchemes:
+    odinAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      x-bearerInfoFunc: swagger_server.controllers.odin_controller.check_odinAuth
+

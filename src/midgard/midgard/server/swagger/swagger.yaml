@@ -1,0 +1,276 @@
+openapi: 3.0.1
+info:
+  title: midgard API
+  description: This spec defines the midgard API, which is a daemonset used to communicate
+    hardware resource info
+  termsOfService: http://swagger.io/terms/
+  contact:
+    email: odin@interactions.com
+  license:
+    name: Interactions
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 0.0.1
+servers:
+- url: https://dev-null.io/v1
+- url: http://dev-null.io/v1
+tags:
+- name: midgard
+  description: midgard API definition
+  externalDocs:
+    description: midgard API definition
+    url: https://dev-null.io
+paths:
+  /gpus:
+    get:
+      tags:
+      - midgard
+      summary: Get info for all gpus
+      operationId: get_gpus
+      parameters:
+      - name: q
+        in: query
+        description: Get GPU devices by partial name match
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Provide back GPU device statuses
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GPUDeviceInfo'
+      x-openapi-router-controller: midgard.server.controllers.midgard_controller
+  /gpus/{id}:
+    get:
+      tags:
+      - midgard
+      summary: Get GPU device info for a single device
+      operationId: get_gpu
+      parameters:
+      - name: id
+        in: path
+        description: ID of GPU
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: Provide back a GPU device status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GPUDeviceInfo'
+      x-openapi-router-controller: midgard.server.controllers.midgard_controller
+components:
+  schemas:
+    PCIInfoGPU:
+      type: object
+      properties:
+        pciBusId:
+          type: string
+      example:
+        pciBusId: pciBusId
+    FBMemoryUsageGPU:
+      type: object
+      properties:
+        total:
+          type: number
+          format: float
+        used:
+          type: number
+          format: float
+        free:
+          type: number
+          format: float
+        unit:
+          type: string
+    GPUUtilizationInfo:
+      type: object
+      properties:
+        gpuUtil:
+          type: number
+        memoryUtil:
+          type: number
+        unit:
+          type: string
+      example:
+        memoryUtil: 6.02745618307040320615897144307382404804229736328125
+        unit: unit
+        gpuUtil: 0.80082819046101150206595775671303272247314453125
+    ECCModeInfo:
+      type: object
+      properties:
+        currentEcc:
+          type: string
+        pendingEcc:
+          type: string
+      example:
+        pendingEcc: pendingEcc
+        currentEcc: currentEcc
+    GPUTemperatureInfo:
+      type: object
+      properties:
+        gpuTemp:
+          type: number
+        gpuTempMaxThreshold:
+          type: number
+        gpuTempSlowThreshold:
+          type: number
+        unit:
+          type: string
+      example:
+        unit: unit
+        gpuTemp: 1.46581298050294517310021547018550336360931396484375
+        gpuTempSlowThreshold: 5.63737665663332876420099637471139430999755859375
+        gpuTempMaxThreshold: 5.962133916683182377482808078639209270477294921875
+    GPUPowerReadingInfo:
+      type: object
+      properties:
+        powerManagement:
+          type: string
+        powerDraw:
+          type: number
+        powerLimit:
+          type: string
+        defaultPowerLimit:
+          type: string
+        minPowerLimit:
+          type: string
+        maxPowerLimit:
+          type: string
+        powerState:
+          type: string
+        unit:
+          type: string
+      example:
+        powerDraw: 2.3021358869347654518833223846741020679473876953125
+        powerLimit: powerLimit
+        unit: unit
+        powerState: powerState
+        defaultPowerLimit: defaultPowerLimit
+        minPowerLimit: minPowerLimit
+        maxPowerLimit: maxPowerLimit
+        powerManagement: powerManagement
+    GPUClockInfo:
+      type: object
+      properties:
+        memClock:
+          type: number
+        unit:
+          type: string
+      example:
+        memClock: 7.061401241503109105224211816675961017608642578125
+        unit: unit
+    GPUMaxClockInfo:
+      type: object
+      properties:
+        smClock:
+          type: number
+        unit:
+          type: string
+      example:
+        unit: unit
+        smClock: 9.301444243932575517419536481611430644989013671875
+    GPUDeviceInfo:
+      type: object
+      properties:
+        id:
+          type: string
+        uuid:
+          type: string
+        productName:
+          type: string
+        productBrand:
+          type: string
+        serial:
+          type: string
+        minorNumber:
+          type: string
+        pci:
+          $ref: '#/components/schemas/PCIInfoGPU'
+        performanceState:
+          type: string
+        fbMemoryUsage:
+          $ref: '#/components/schemas/FBMemoryUsageGPU'
+        computeMode:
+          type: string
+        utilization:
+          $ref: '#/components/schemas/GPUUtilizationInfo'
+        eccMode:
+          $ref: '#/components/schemas/ECCModeInfo'
+        temperature:
+          $ref: '#/components/schemas/GPUTemperatureInfo'
+        powerReadings:
+          $ref: '#/components/schemas/GPUPowerReadingInfo'
+        clocks:
+          $ref: '#/components/schemas/GPUClockInfo'
+        applicationsClocks:
+          $ref: '#/components/schemas/GPUClockInfo'
+        maxClocks:
+          $ref: '#/components/schemas/GPUMaxClockInfo'
+        processes:
+          type: array
+          items:
+            type: string
+      example:
+        processes:
+        - processes
+        - processes
+        powerReadings:
+          powerDraw: 2.3021358869347654518833223846741020679473876953125
+          powerLimit: powerLimit
+          unit: unit
+          powerState: powerState
+          defaultPowerLimit: defaultPowerLimit
+          minPowerLimit: minPowerLimit
+          maxPowerLimit: maxPowerLimit
+          powerManagement: powerManagement
+        productBrand: productBrand
+        fbMemoryUsage: fbMemoryUsage
+        utilization:
+          memoryUtil: 6.02745618307040320615897144307382404804229736328125
+          unit: unit
+          gpuUtil: 0.80082819046101150206595775671303272247314453125
+        uuid: uuid
+        productName: productName
+        clocks:
+          memClock: 7.061401241503109105224211816675961017608642578125
+          unit: unit
+        maxClocks:
+          unit: unit
+          smClock: 9.301444243932575517419536481611430644989013671875
+        minorNumber: minorNumber
+        eccMode:
+          pendingEcc: pendingEcc
+          currentEcc: currentEcc
+        serial: serial
+        computeMode: computeMode
+        performanceState: performanceState
+        pci:
+          pciBusId: pciBusId
+        temperature:
+          unit: unit
+          gpuTemp: 1.46581298050294517310021547018550336360931396484375
+          gpuTempSlowThreshold: 5.63737665663332876420099637471139430999755859375
+          gpuTempMaxThreshold: 5.962133916683182377482808078639209270477294921875
+        id: id
+    GPUDeviceResults:
+      type: object
+      properties:
+        gpus:
+          type: array
+          items:
+            $ref: '#/components/schemas/GPUDeviceInfo'
+      description: Wraps an GPUDeviceInfo list
+    GPUDeviceWrapperDefinition:
+      type: object
+      properties:
+        gpu:
+          $ref: '#/components/schemas/GPUDeviceInfo'
+      description: Wraps an GPUDeviceInfo
+

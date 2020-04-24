@@ -1,0 +1,7 @@
+[
+  {
+    "label": "w2v-gn",
+    "file": "/data/embeddings/GoogleNews-vectors-negative300.bin",
+    "dsz": 300
+  }
+]

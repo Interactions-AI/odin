@@ -1,0 +1,87 @@
+version: 2
+task: classify
+basedir: sst2
+backend: tensorflow
+dataset: SST2
+unif: 0.25
+
+features:
+  - name: word
+    vectorizer:
+      type: token1d
+      transform: baseline.lowercase
+    embeddings:
+      label: w2v-gn
+
+preproc:
+  rev: false
+  clean: true
+
+reader:
+  type: default
+
+model:
+  type: default
+  filtsz: [3, 4, 5]
+  cmotsz: 100
+  dropout: 0.5
+  finetune: true
+
+train:
+  batchsz: 50
+  epochs: 2
+  optim: adadelta
+  eta: 1.0
+  early_stopping_metric: acc
+
+# This is a slightly weird placement because yaml can only use a reference if
+# the anchor comes before it
+nest: &nest !env $NEST
+
+export_policy:
+  type: best-of
+  iters: 2
+  metric: acc
+
+export:
+  output_dir: *nest
+  project: &project example
+  name: &name pipeline
+
+raven-nlu: &nlu !env $NLU
+nlu-loc: &nlu-loc !path [src, resources, client, *project, *name]
+
+chores:
+  move-client:
+    type: copy
+    src: ^export.client
+    dst: !path [*nlu, *nlu-loc]
+  add-nest:
+    type: git-add
+    dir: *nest
+    files:
+      - ^export.client
+      - ^export.server
+  add-nlu:
+    type: git-add
+    dir: *nlu
+    files:
+      - ^move-client
+  commit-nlu:
+    depends: add-nlu
+    type: git-commit
+    dir: *nlu
+    message: Add example client bundle to nlu
+  commit-nest:
+    depends: add-nest
+    type: git-commit
+    dir: *nest
+    message: Add example export bundle to nest
+  push-nlu:
+    depends: commit-nlu
+    type: git-push
+    dir: *nlu
+  push-nest:
+    depends: commit-nest
+    type: git-push
+    dir: *nest

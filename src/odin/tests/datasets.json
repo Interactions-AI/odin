@@ -1,0 +1,8 @@
+[
+    {
+        "train_file": "/data/datasets/sst2/stsa.binary.phrases.train",
+        "valid_file": "/data/datasets/sst2/stsa.binary.dev",
+        "test_file": "/data/datasets/sst2/stsa.binary.test",
+        "label": "SST2"
+    }
+]
