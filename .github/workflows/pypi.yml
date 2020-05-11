@@ -1,0 +1,33 @@
+name: Publish to PyPI
+
+on:
+    push:
+        tags:
+        - '*'
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+        - name: Checkout
+          uses: actions/checkout@v1
+        - name: Setup Python
+          uses: actions/setup-python@v1
+          with:
+              python-version: 3.6
+        - name: Install dependencies
+          run: python -m pip install --upgrade pip setuptools wheel
+        - name: Build Odin-ML Package
+          run: |
+              cd src/odin 
+              python setup.py sdist bdist_wheel
+              cd ../..
+        - name: Publish Odin-ML Package
+          if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
+          uses: pypa/gh-action-pypi-publish@master
+          with:
+              user: __token__
+              password: ${{ secrets.pypi_password }}
+              packages_dir: odin/src/odin/dist
+
+

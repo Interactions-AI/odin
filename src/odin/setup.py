@@ -13,10 +13,10 @@ def get_version(project_name):
 
 
 class About(object):
-    NAME = 'odin'
-    AUTHOR = 'mead.baseline'
+    NAME = 'odin-ml'
+    AUTHOR = 'odin'
     VERSION = get_version(NAME)
-    EMAIL = f"{AUTHOR}@gmail.com"
+    EMAIL = f"{AUTHOR}@interactions.com"
 
 
 setup(
