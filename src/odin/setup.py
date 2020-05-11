@@ -13,14 +13,14 @@ def get_version(project_name):
 
 
 class About(object):
-    NAME = 'odin-ml'
-    AUTHOR = 'odin'
+    NAME = 'odin'
+    AUTHOR = 'Interactions, LLC'
     VERSION = get_version(NAME)
-    EMAIL = f"{AUTHOR}@interactions.com"
+    EMAIL = f"{NAME}@interactions.com"
 
 
 setup(
-    name=About.NAME,
+    name=f"{About.NAME}-ml",
     version=About.VERSION,
     packages=find_packages(),
     install_requires=[
