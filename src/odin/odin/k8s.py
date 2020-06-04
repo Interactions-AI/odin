@@ -71,6 +71,10 @@ def populate_secret(secret_values: Dict) -> Secret:
     return Secret(**secret_values)
 
 
+def populate_config_map(config_map_values: Dict) -> ConfigMap:
+    return ConfigMap(**config_map_values)
+
+
 class Task:
     """An object that contains enough info to run in k8s
     """
@@ -83,6 +87,7 @@ class Task:
         args: List[str] = None,
         mounts: Optional[List[Volume]] = None,
         secrets: Optional[List[Secret]] = None,
+        config_maps: Optional[List[ConfigMap]] = None,
         num_gpus: int = None,
         pull_policy: str = 'IfNotPresent',
         node_selector: Optional[Dict[str, str]] = None,
@@ -113,6 +118,7 @@ class Task:
         self.args = args
         self.mounts = mounts
         self.secrets = secrets
+        self.config_maps = config_maps
         self.num_gpus = num_gpus
         self.pull_policy = pull_policy
         self.node_selector = node_selector
@@ -132,6 +138,8 @@ class Task:
         mounts = [Volume(m['path'], m['name'], m['claim']) for m in listify(mounts)] if mounts is not None else None
         secrets = dict_value.get('secret', dict_value.get('secrets'))
         secrets = [populate_secret(s) for s in listify(secrets)] if secrets is not None else None
+        config_maps = dict_value.get('config_map', dict_value.get('config_maps'))
+        config_maps = [populate_config_map(cm) for cm in listify(config_maps)] if config_maps is not None else None
 
         return Task(
             dict_value['name'],
@@ -140,6 +148,7 @@ class Task:
             dict_value.get('args', []),
             mounts,
             secrets,
+            config_maps,
             dict_value.get('num_gpus', 0),
             dict_value.get('pull_policy', 'IfNotPresent'),
             dict_value.get('node_selector'),
@@ -289,7 +298,7 @@ class ResourceHandler:
         :returns: A list of configmaps or `None`
         :rtype: Optional[List[ConfigMap]]
         """
-        configmaps = []
+        configmaps = task.config_maps if task.config_maps is not None else []
         command = listify(task.command)
         if command[0].startswith('odin-chores'):
             try:
