@@ -18,6 +18,7 @@ def _gpu2row(gpu, host):
     row = Row(host=host, gpu=gpu_id, type=gpu_type, free=free, processes=processes, pids=pids)
     return row
 
+
 def request_nodes_http(url: str) -> None:
     """Request the status over HTTP
     :param url: the base URL
