@@ -21,7 +21,7 @@ class TFJobHandler(ResourceHandler):
     NAME = "TFJob"
     GROUP = "kubeflow.org"
     PLURAL = "tfjobs"
-    VERSION = "v1beta2"
+    VERSION = "v1"
     ALIAS = ('tfjob', 'tensorflowjob')
     # This label selector was changed on Mar 7, 2019. We are using the old format
     # https://github.com/kubeflow/tf-operator/pull/951

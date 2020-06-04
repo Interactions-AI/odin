@@ -14,7 +14,7 @@ class MPIJobHandler(ResourceHandler):
     NAME = "MPIJob"
     GROUP = "kubeflow.org"
     PLURAL = "mpijobs"
-    VERSION = "v1alpha1"
+    VERSION = "v1"
     SELECTOR = "mpi_job_name"
     ROLE_SELECTOR = "mpi_role_type"
     ROLE_TYPE = "launcher"

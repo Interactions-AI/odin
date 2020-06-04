@@ -21,7 +21,7 @@ class PyTorchJobHandler(ResourceHandler):
     NAME = "PyTorchJob"
     GROUP = "kubeflow.org"
     PLURAL = "pytorchjobs"
-    VERSION = "v1beta2"
+    VERSION = "v1"
     # This label selector was changed, we are using the new format
     SELECTOR = "pytorch-job-name"
     GROUP_KEY = "group-name"
@@ -69,12 +69,12 @@ class PyTorchJobHandler(ResourceHandler):
 
         worker_replica_spec = {}
         worker_replica_spec['replicas'] = task.num_workers
-        worker_replica_spec['restartPolicy'] = PyTorchJobHandler.RESTART_ON_FAILURE
+        worker_replica_spec['restartPolicy'] = PyTorchJobHandler.RESTART_NEVER
         worker_replica_spec['template'] = template
 
         master_replica_spec = {}
         master_replica_spec['replicas'] = 1
-        master_replica_spec['restartPolicy'] = PyTorchJobHandler.RESTART_ON_FAILURE
+        master_replica_spec['restartPolicy'] = PyTorchJobHandler.RESTART_NEVER
         master_replica_spec['template'] = template
 
         spec = {}
