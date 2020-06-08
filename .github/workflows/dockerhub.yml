@@ -32,4 +32,12 @@ jobs:
               path: src/odin
               tags: latest
 
+        - name: Build & Push odin-ml-http image
+          uses: docker/build-push-action@v1
+          with:
+              username: ${{ secrets.DOCKER_USERNAME }}
+              password: ${{ secrets.DOCKER_PASSWORD }}
+              repository: interactions/odin-ml-http
+              path: src/odin-http
+              tags: latest
 
