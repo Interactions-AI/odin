@@ -109,6 +109,7 @@ class Task:
         :param args: The arguments to supply the command
         :param mounts: Optional `Volume`s to mount
         :param secrets: Optional `Secret`s to mount
+        :param config_maps: Optional `CongfigMap`s to mount
         :param num_gpus: The number of GPUs requested for this task
         :param pull_policy: pull policy, defaults to `IfNotPresent`
         :param node_selector: This is a list of labels that can be used to select a specific node
