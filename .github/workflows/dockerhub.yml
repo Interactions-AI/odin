@@ -20,7 +20,7 @@ jobs:
               username: ${{ secrets.DOCKER_USERNAME }}
               password: ${{ secrets.DOCKER_PASSWORD }}
               repository: interactions/odin-ml
-              dockerfile: Dockerfile.cuda101
+              dockerfile: src/midgard/Dockerfile.cuda101
               path: src/midgard
               tags: latest
 
