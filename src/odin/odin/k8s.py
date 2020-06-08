@@ -72,6 +72,11 @@ def populate_secret(secret_values: Dict) -> Secret:
 
 
 def populate_config_map(config_map_values: Dict) -> ConfigMap:
+    """Populate a config map from a dictionary
+
+    :param config_map_values: A dictionary of values
+    :return: A config map
+    """
     return ConfigMap(**config_map_values)
 
 
