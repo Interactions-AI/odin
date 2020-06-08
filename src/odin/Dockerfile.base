@@ -14,18 +14,7 @@ COPY . .
 RUN python3.6 -m pip install .
 
 # Install baseline
-ADD https://github.com/dpressel/mead-baseline/archive/feature/v2.tar.gz /usr/odin/mead-baseline-feature-v2.tar.gz
-RUN tar xzf mead-baseline-feature-v2.tar.gz && \
-    cd ./mead-baseline-feature-v2/layers && \
-    pip install -e . && \
-    cd .. && \
-    pip install -e .[test,yaml]
-
-# Install xpctl
-ADD https://github.com/mead-ml/xpctl/archive/master.tar.gz /usr/odin/xpctl-master.tar.gz
-RUN tar xzf xpctl-master.tar.gz && \
-    cd ./xpctl-master/ && \
-    pip install -e .
+RUN python3.6 -m pip install mead-baseline && python3.6 -m pip install mead-xpctl
 
 # Install hpctl
 ADD https://github.com/mead-ml/hpctl/archive/master.tar.gz /usr/odin/hpctl-master.tar.gz
