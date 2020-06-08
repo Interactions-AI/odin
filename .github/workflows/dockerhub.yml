@@ -14,8 +14,6 @@ jobs:
           with:
               ref: ${{ github.head_ref }}
               token: ${{ secrets.MACHINE_PAT }}
-        - name: Switch to src/midgard
-          run: cd src/midgard
         - name: Build & Push midgard Docker image with CUDA 10.1
           uses: docker/build-push-action@v1
           with:
@@ -23,7 +21,6 @@ jobs:
               password: ${{ secrets.DOCKER_PASSWORD }}
               repository: interactions/odin-ml
               dockerfile: Dockerfile.cuda101
+              path: src/midgard
               tags: latest
-        - name: Switch to src/odin
-          run: cd ../odin
 
