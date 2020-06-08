@@ -3,14 +3,17 @@ name: Publish to DockerHub
 on:
     push:
         branches:
-        - master
+        - 'master'
 
 jobs:
     build:
         runs-on: ubuntu-latest
         steps:
         - name: Checkout
-          uses: actions/checkout@v1
+          uses: actions/checkout@v2
+          with:
+              ref: ${{ github.head_ref }}
+              token: ${{ secrets.GITHUB_API_TOKEN }}
         - name: Switch to src/midgard
           run: cd src/midgard
         - name: Build & Push midgard Docker image with CUDA 10.1
