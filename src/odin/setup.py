@@ -46,7 +46,6 @@ setup(
             'odin-user = odin.client.user:main',
             'odin-chores = odin.chores:main',
             'odin-cleanup = odin.client.cleanup:main',
-            'odin-export = odin.model.export:main',
             'odin-select-model = odin.model.selector:main',
             'odin-generate = odin.client.generate:main',
             'odin-logs = odin.client.logs:main',
