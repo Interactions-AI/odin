@@ -16,10 +16,9 @@ RUN cd /opt/git-lfs && \
     git lfs install
 ########################################################################
 
-# Install tensorflow
 RUN python3.6 -m pip install --upgrade pip && \
     python3.6 -m pip install setuptools && \
-    python3.6 -m pip install tensorflow==1.14 tensorflow_hub
+    python3.6 -m pip install pytest 
 
 # Copy project over
 WORKDIR /usr/odin
