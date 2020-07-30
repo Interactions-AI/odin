@@ -371,7 +371,6 @@ def generate_export_task(  # pylint: disable=too-many-locals
     metric: str = 'acc',
     export_policy: Optional[str] = None,
     pull_policy: str = ALWAYS,
-    models_claim: Optional[str] = None,
 ) -> Dict:
     """Generate a task (an element in the task list for the pipeline) that is a export job.
 
@@ -385,7 +384,6 @@ def generate_export_task(  # pylint: disable=too-many-locals
     :param metric: The metric to use when comparing models.
     :param export_policy: How to make a decision if we should export things.
     :param pull_policy: Should k8s repull your containers.
-    :param models_claim: The name of the /models claim.
 
     :returns:
         Dict, The task the represents a export job to run in the odin pipeline.
@@ -397,10 +395,6 @@ def generate_export_task(  # pylint: disable=too-many-locals
     template['image'] = odin_image
     template['mounts'][0]['claim'] = claim
     template['pull_policy'] = pull_policy
-
-    # Add the models pvc to the mounts.
-    if models_claim:
-        template['mounts'].append({"name": "models", "path": "/models", 'claim': models_claim})
 
     # For each model we trained add it to `args` just after `--models`
     models_idx = template['args'].index('--models') + 1
@@ -475,8 +469,6 @@ def generate_pipeline(  # pylint: disable=too-many-locals,too-many-branches,too-
     clobber: bool = False,
     addons: Dict[str, Dict[str, str]] = None,
     mead_eval_dataset: Optional[str] = None,
-    models_claim: Optional[str] = None,
-    export_to_dev: bool = False,
     template: Optional[Union[Dict, List, str]] = None,
     hpctl: bool = False,
     hpctl_addons: List[Dict[str, str]] = None,
@@ -522,8 +514,6 @@ def generate_pipeline(  # pylint: disable=too-many-locals,too-many-branches,too-
     :param addons: A mapping of addon file names to source code is contained
        in a mapping keyed by the model name.
     :param mead_eval_dataset: The dataset to use in mead-eval.
-    :param models_claim: The name of the model pvc for exporting.
-    :param export_to_dev: Should the models be copied to raven-dev.
     :param template: The raven-template sampling directives or a file.
     :param hpctl: Should we run hpctl sampling at the start of the file?
     :param hpctl_addons: Sampling addons needed from hpctl, not support atm
@@ -564,7 +554,7 @@ def generate_pipeline(  # pylint: disable=too-many-locals,too-many-branches,too-
             embeddings = os.path.join("${WORK_PATH}", "embeddings.yml")
 
     template_loc = os.path.join(root_path, 'templates')
-    images, claims = get_images(template_loc, mead_image, odin_image, claim_name, models_claim)
+    images, claims = get_images(template_loc, mead_image, odin_image, claim_name)
 
     templating_template = read_config_file(os.path.join(template_loc, 'templating-template.yml'))
     mead_template = read_config_file(os.path.join(template_loc, 'mead-task-template.yml'))
@@ -663,7 +653,6 @@ def generate_pipeline(  # pylint: disable=too-many-locals,too-many-branches,too-
         metric=metric,
         export_policy=export_policy,
         pull_policy=pull_policy,
-        models_claim=claims['models'] if export_to_dev else None,
     )
     chore_depends = prev_tasks
     if export_task:
@@ -692,16 +681,14 @@ def get_images(
     mead: Optional[str] = None,
     odin: Optional[str] = None,
     claim: Optional[str] = None,
-    models: Optional[str] = None,
 ) -> Tuple[Dict[str, str], Dict[str, str]]:
     """Get image names with a fallback to the images file."""
     defaults = read_config_file(os.path.join(template_loc, 'images.yml'))
     mead = mead if mead is not None else defaults['mead-image']
     odin = odin if odin is not None else defaults['odin-image']
     claim = claim if claim is not None else defaults['claim-name']
-    models = models if models is not None else defaults['models-claim']
     images = {'mead': mead, 'odin': odin, 'template': defaults['template-image'], 'hpctl': defaults['hpctl-image']}
-    claims = {'data': claim, 'models': models}
+    claims = {'data': claim}
     return images, claims
 
 
@@ -843,8 +830,6 @@ def preprocess_arguments(args: argparse.Namespace) -> Dict:  # pylint: disable=t
         'clobber': args.clobber,
         'addons': addons,
         'mead_eval_dataset': args.mead_eval_dataset,
-        'models_claim': args.models_claim,
-        'export_to_dev': args.export_to_dev,
         'template': args.template,
         'hpctl': args.hpctl,
         'seed': args.seed,
@@ -900,7 +885,6 @@ def main():
         "--odin-image", "--odin_image", help="The name of the image to use for odin exporting and odin chores."
     )
     parser.add_argument("--claim-name", "--claim_name", help="The name of the k8s pvc claim.")
-    parser.add_argument('--models-claim', "--models_claim", help="/models pvc name")
     parser.add_argument(
         "--pull-policy",
         "--pull_policy",
@@ -914,9 +898,6 @@ def main():
     parser.add_argument("--name", help="The name of the model, i.e. intent, sf, etc.")
     parser.add_argument('--modules', help='modules to load', default=[], nargs='+', required=False)
     parser.add_argument('--mead-eval-dataset', "--mead_eval_dataset", help="The dataset to use for mead-eval")
-    parser.add_argument(
-        '--export-to-dev', "--export_to_dev", action='store_true', help="Should exported models be copied to raven-dev"
-    )
     parser.add_argument('--template', help='An odin-template sample file.')
     parser.add_argument('--hpctl', help='Should hpctl be used in the pipeline to sample configs', action="store_true")
     parser.add_argument('--seed', help='A seed for controlling hpctl', type=int)
