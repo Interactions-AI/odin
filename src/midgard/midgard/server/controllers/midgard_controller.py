@@ -21,11 +21,13 @@ def get_gpu(id_):  # noqa: E501
 
     :rtype: GPUDeviceInfo
     """
-    results = flask.globals.current_app.nvsmi.DeviceQuery(Q)
-    output = [r for r in results if r['uuid'] == id_][0]['gpu']
-    gpu_device_info = _to_camel(output)
-    return GPUDeviceWrapperDefinition(gpu_device_info)
-
+    try:
+        results = flask.globals.current_app.nvsmi.DeviceQuery(Q)
+        output = [r for r in results if r['uuid'] == id_][0]['gpu']
+        gpu_device_info = _to_camel(output)
+        return GPUDeviceWrapperDefinition(gpu_device_info)
+    except:
+        return GPUDeviceWrapperDefinition()
 
 def _to_camel(r: GPUDeviceInfo):
     applications_clocks = GPUClockInfo(**r['applications_clocks'])
@@ -60,6 +62,9 @@ def get_gpus(q=None):  # noqa: E501
 
     :rtype: GPUDeviceInfo
     """
-    results = flask.globals.current_app.nvsmi.DeviceQuery(Q)['gpu']
-    gpu_device_infos = [_to_camel(r) for r in results]
+    try:
+        results = flask.globals.current_app.nvsmi.DeviceQuery(Q)['gpu']
+        gpu_device_infos = [_to_camel(r) for r in results]
+    except:
+        gpu_device_infos = []
     return GPUDeviceResults(gpu_device_infos)

@@ -41,7 +41,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GPUDeviceInfo'
+                $ref: '#/components/schemas/GPUDeviceResults'
       x-openapi-router-controller: midgard.server.controllers.midgard_controller
   /gpus/{id}:
     get:

@@ -2,10 +2,10 @@
 
 import connexion
 import argparse
-import pynvml
-from pynvml.smi import nvidia_smi
-from midgard.server import encoder
+import logging
 
+from midgard.server import encoder
+flask_logger = logging.getLogger('werkzeug')
 parser = argparse.ArgumentParser(description='midgard')
 parser.add_argument('--port', default='29999')
 args = parser.parse_args()
@@ -15,7 +15,14 @@ def main():
     app = connexion.App(__name__, specification_dir='./swagger/')
     app.app.json_encoder = encoder.JSONEncoder
     app.add_api('swagger.yaml', arguments={'title': 'midgard API'}, pythonic_params=True)
-    app.app.nvsmi = nvidia_smi.getInstance()
+
+    try:
+        import pynvml
+        from pynvml.smi import nvidia_smi
+        app.app.nvsmi = nvidia_smi.getInstance()
+    except Exception:
+        flask_logger.error("Failed to load NVML.  This node cannot produce GPU information")
+        app.app.nvsmi = None
     app.run(port=args.port)
 
 
