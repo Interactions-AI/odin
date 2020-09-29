@@ -20,7 +20,7 @@ from odin.core import read_pipeline_config
 from odin.generate import generate_pipeline
 from odin.executor import Executor
 from odin.status import get_status
-from odin.store import MongoStore, MongoCache
+from odin.store import create_store_backend, create_cache_backend
 from odin.k8s import KubernetesTaskManager
 
 LOGGER = logging.getLogger('odin')
@@ -174,8 +174,8 @@ def main():
     args = parser.parse_args()
 
     cred_params = read_config_stream(args.cred)
-    STORE = MongoStore(**cred_params['jobs_db'])
-    CACHE = MongoCache(**cred_params['jobs_db'])
+    STORE = create_store_backend(**cred_params['jobs_db'])
+    CACHE = create_cache_backend(**cred_params['jobs_db'])
     ROOT_PATH = os.path.normpath(args.root_path)
     args.data_path = args.data_path if args.data_path is not None else args.root_path
     DATA_PATH = os.path.normpath(args.data_path)

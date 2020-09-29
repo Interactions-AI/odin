@@ -11,7 +11,7 @@ from baseline.utils import exporter, read_config_stream
 from mead.utils import convert_path
 from odin import LOGGER
 from odin.k8s import KubernetesTaskManager, TaskManager
-from odin.store import Store, MongoStore
+from odin.store import Store, create_store_backend
 from odin.utils.formatting import print_table
 
 
@@ -95,7 +95,7 @@ def main():
     args = parser.parse_args()
 
     cred_params = read_config_stream(args.cred)
-    store = MongoStore(**cred_params['jobs_db'])
+    store = create_store_backend(**cred_params['jobs_db'])
 
     cleaned = cleanup(args.work, store, purge_db=args.db, purge_fs=args.fs, data_dir=args.data_dir)
     print("Results of this request:")
