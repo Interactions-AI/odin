@@ -13,7 +13,7 @@ from typing import List, Dict, Tuple, Callable, Type, Optional, Union
 
 from baseline.utils import exporter, get_metric_cmp, optional_params, read_config_stream
 from mead.utils import convert_path, get_dataset_from_key
-from odin.store import MongoStore, Store
+from odin.store import Store, create_store_backend
 from xpctl import xpctl_client
 from xpctl.xpclient.api import XpctlApi
 from xpctl.xpclient.rest import ApiException
@@ -369,7 +369,7 @@ def main():  # pylint: disable=too-many-statements
 
     cred_params = read_config_stream(args.cred)
 
-    store = MongoStore(**cred_params['jobs_db'])
+    store = create_store_backend(**cred_params['jobs_db'])
     args.store = store
 
     xpctl_url = args.xpctl_api_url if args.xpctl_api_url is not None else cred_params['reporting_db']['host']

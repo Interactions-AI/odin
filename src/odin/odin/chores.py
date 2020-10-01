@@ -12,7 +12,7 @@ import git
 from baseline.utils import exporter, optional_params, read_config_stream, import_user_module
 from odin.core import create_graph, _to_kwargs, wire_inputs, format_output
 from odin.dag import topo_sort, find_children, dot_graph
-from odin.store import MongoStore
+from odin.store import create_store_backend
 
 __all__ = []
 export = exporter(__all__)
@@ -340,7 +340,7 @@ def main():
         import_user_module(addon)
 
     cred_params = read_config_stream(args.cred)
-    store = MongoStore(**cred_params['jobs_db'])
+    store = create_store_backend(**cred_params['jobs_db'])
     config = read_config_stream(args.file)
     previous = store.get_previous(args.label)
     parent_details = store.get_parent(args.label)

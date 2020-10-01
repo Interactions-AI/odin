@@ -6,7 +6,7 @@ from typing import Union, List, Tuple, Set, Optional
 
 from baseline.utils import exporter, listify, read_config_stream, color, Colors
 from mead.utils import convert_path
-from odin.store import Store, MongoStore
+from odin.store import Store, create_store_backend
 from odin.executor import PipelineStatus
 from odin.utils.formatting import print_table
 
@@ -130,7 +130,7 @@ def main():
     parser.add_argument('--all', action='store_true', help="Show all columns of the status message.")
     args = parser.parse_args()
     cred_params = read_config_stream(args.cred)
-    store = MongoStore(**cred_params['jobs_db'])
+    store = create_store_backend(**cred_params['jobs_db'])
     work = store.parents_like(args.work)
     if not work:
         print('No job found')
