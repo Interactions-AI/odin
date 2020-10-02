@@ -49,11 +49,11 @@ class Job(DB.Base):
     id = sql.Column(sql.Integer, primary_key=True)
     label = sql.Column(sql.String, nullable=False)
     job_name = sql.Column(sql.String)
-    version = sql.Column(sql.String),
-    status = sql.Column(sql.String),
-    submit_time = sql.Column(sql.DateTime),
+    version = sql.Column(sql.String)
+    status = sql.Column(sql.String)
+    submit_time = sql.Column(sql.DateTime)
     completion_time = sql.Column(sql.DateTime, nullable=True)
-    parent_label = sql.Column(sql.String),
+    parent_label = sql.Column(sql.String, nullable=True, default=None)
     details = sql.Column(JSON, nullable=False)
 
 
@@ -227,7 +227,7 @@ class PostgresStore(Store):
         session = self.Session()
         kv = self._get_if(id, session).scalar()
         if kv is not None:
-            kv.details = d
+            kv.details.update(d)
             if status is not None:
                 kv.status = status
             if completion_time is not None:
@@ -252,8 +252,13 @@ class PostgresStore(Store):
         :return: Did the removal succeed.
         """
         session = self.Session()
-        exp = session.query(Job).filter(Job.label == job_id)
-        session.delete(exp)
+        children = session.query(Job).filter(Job.parent_label == job_id).all()
+        for job in children:
+            session.delete(job)
+
+        parent = session.query(Job).filter(Job.label == job_id).first()
+        session.delete(parent)
+
         session.commit()
         return True
 
@@ -265,7 +270,7 @@ class PostgresStore(Store):
         { <field>: { $regex: /pattern/<options> } }
         """
         session = self.Session()
-        matches = [h.label for h in session(Job).filter(Job.parent_label is None).like(f'{pattern}%').all()]
+        matches = [h.label for h in session.query(Job).filter(Job.parent_label == None).filter(Job.label.ilike(f'{pattern}%')).all()]
         return matches
 
     def children_like(self, pattern: str) -> List[str]:
@@ -275,7 +280,7 @@ class PostgresStore(Store):
         :return: Any jobs that match this
         """
         session = self.Session()
-        matches = [h.label for h in session(Job).filter(Job.parent_label is not None).like(f'{pattern}%').all()]
+        matches = [h.label for h in session.query(Job).filter(Job.parent_label!=None).filter(Job.label.ilike(f'{pattern}%')).all()]
         return matches
 
     def is_a_child(self, child: str) -> bool:

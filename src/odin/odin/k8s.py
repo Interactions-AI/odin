@@ -21,15 +21,18 @@ from odin.store import Store
 ConfigMap = namedtuple('ConfigMap', 'path name sub_path')
 
 HASH_TRAILING = '-hash'
-DEFAULT_MODULES = [
-    'odin.handlers.mpijob',
-    'odin.handlers.tfjob',
-    'odin.handlers.pytorchjob',
+CORE_MODULES = [
     'odin.handlers.job',
     'odin.handlers.deployment',
     'odin.handlers.service',
-    'odin.handlers.pod',
+    'odin.handlers.pod'
 ]
+KF_MODULES = [
+    'odin.handlers.mpijob',
+    'odin.handlers.tfjob',
+    'odin.handlers.pytorchjob',
+]
+DEFAULT_MODULES = CORE_MODULES + KF_MODULES
 REGISTRY = 'registry'
 
 Event = namedtuple("Event", "type reason source message timestamp")
