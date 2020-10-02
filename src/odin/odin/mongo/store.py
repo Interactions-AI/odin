@@ -19,6 +19,7 @@ class MongoCache(Cache):
         passwd: Optional[str] = None,
         db: str = 'jobs_db',
         port: int = pymongo.MongoClient.PORT,
+        **kwargs
     ):
         """Connect to the mongodb backend.
 
@@ -84,7 +85,7 @@ class MongoStore(Store):
     This implementation fulfills the `Store` interface backed by a MongoDB
     """
 
-    def __init__(self, host, user, passwd, db='jobs_db', port=pymongo.MongoClient.PORT):
+    def __init__(self, host, user, passwd, db='jobs_db', port=pymongo.MongoClient.PORT, **kwargs):
         """A MongoStore is a Store implemented using MongoDB
         """
         super().__init__()

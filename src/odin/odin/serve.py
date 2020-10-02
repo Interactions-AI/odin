@@ -21,7 +21,7 @@ from odin.generate import generate_pipeline
 from odin.executor import Executor
 from odin.status import get_status
 from odin.store import create_store_backend, create_cache_backend
-from odin.k8s import KubernetesTaskManager
+from odin.k8s import KubernetesTaskManager, DEFAULT_MODULES, CORE_MODULES
 
 LOGGER = logging.getLogger('odin')
 
@@ -124,7 +124,7 @@ async def handle_request(websocket, _) -> None:  # pylint: disable=too-many-bran
             response = f"PONG {work}"
             await send({APIField.STATUS: APIStatus.OK, APIField.RESPONSE: response})
         elif cmd == 'EVENTS':
-            task_mgr = KubernetesTaskManager(STORE)
+            task_mgr = KubernetesTaskManager(STORE, modules=MODULES)
             await send(
                 {
                     APIField.STATUS: APIStatus.OK,
@@ -136,7 +136,7 @@ async def handle_request(websocket, _) -> None:  # pylint: disable=too-many-bran
             obj = json.loads(bson_dumps({'success': True, 'jobs': obj}))
             await send({APIField.STATUS: APIStatus.OK, APIField.RESPONSE: obj})
         elif cmd == 'LOGS':
-            task_mgr = KubernetesTaskManager(STORE)
+            task_mgr = KubernetesTaskManager(STORE, modules=MODULES)
             name = work.pop('resource')
             work.pop('namespace')
             work['name'] = name
@@ -165,14 +165,17 @@ def main():
     global CACHE
     global ROOT_PATH
     global DATA_PATH
+    global MODULES
     parser = argparse.ArgumentParser(description='Websocket-based Pipeline scheduler')
     parser.add_argument('--root_path', help='Root directory', type=convert_path, required=True)
     parser.add_argument('--host', default='0.0.0.0', type=str)
     parser.add_argument('--port', default='30000')
     parser.add_argument('--cred', help='cred file', type=convert_path, required=True)
     parser.add_argument('--data_path', help='data directory')
+    parser.add_argument('--modules', default='all', choices=['all', 'core'])
     args = parser.parse_args()
 
+    MODULES = DEFAULT_MODULES if args.modules == 'all' else CORE_MODULES
     cred_params = read_config_stream(args.cred)
     STORE = create_store_backend(**cred_params['jobs_db'])
     CACHE = create_cache_backend(**cred_params['jobs_db'])
