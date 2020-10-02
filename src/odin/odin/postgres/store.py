@@ -227,6 +227,7 @@ class PostgresStore(Store):
         session = self.Session()
         kv = self._get_if(id, session).scalar()
         if kv is not None:
+            kv.details = deepcopy(kv.details)
             kv.details.update(d)
             if status is not None:
                 kv.status = status
