@@ -41,7 +41,7 @@ RUN tar xzf hpctl-master.tar.gz && \
     pip install -e .
 
 RUN python3.6 -m pip install pylint
-RUN pylint --persistent=n ./odin
+#RUN pylint --persistent=n ./odin
 
 # TODO run tests/etc.
 RUN pytest /usr/odin/tests
