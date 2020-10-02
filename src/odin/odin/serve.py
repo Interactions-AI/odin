@@ -7,12 +7,12 @@ import argparse
 import asyncio
 import traceback
 from datetime import datetime, date
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from functools import partial
 import websockets
 import git
 from bson.json_util import dumps as bson_dumps
-from baseline.utils import read_config_stream
+from eight_mile.utils import read_config_stream
 from mead.utils import convert_path
 from odin import ODIN_LOGO, APIField, APIStatus
 from odin.cleanup import cleanup
@@ -158,6 +158,26 @@ async def handle_request(websocket, _) -> None:  # pylint: disable=too-many-bran
         await websocket.send(json.dumps({APIField.STATUS: APIStatus.ERROR, APIField.RESPONSE: str(exc)}))
 
 
+def get_db_config(cred: Optional[str]) -> Dict:
+    """
+
+    :param cred:
+    :return:
+    """
+    if cred:
+        cred_params = read_config_stream(cred)['jobs_db']
+
+    else:
+        cred_params = {}
+        cred_params['backend'] = os.environ.get("ODIN_JOBS_BACKEND", "postgres")
+        cred_params['host'] = os.environ.get("SQL_HOST", "127.0.0.1")
+        cred_params['port'] = os.environ.get("DB_PORT", 5432)
+        cred_params['user'] = os.environ.get("DB_USER")
+        cred_params['passwd'] = os.environ.get("DB_PASS")
+    cred_params['db'] = os.environ.get("DB_NAME", "jobs_db")
+    return cred_params
+
+
 def main():
     """Launch a websocket server that will run forever and serve pipelines
     """
@@ -170,15 +190,15 @@ def main():
     parser.add_argument('--root_path', help='Root directory', type=convert_path, required=True)
     parser.add_argument('--host', default='0.0.0.0', type=str)
     parser.add_argument('--port', default='30000')
-    parser.add_argument('--cred', help='cred file', type=convert_path, required=True)
+    parser.add_argument('--cred', help='cred file', type=convert_path)
     parser.add_argument('--data_path', help='data directory')
     parser.add_argument('--modules', default='all', choices=['all', 'core'])
     args = parser.parse_args()
 
     MODULES = DEFAULT_MODULES if args.modules == 'all' else CORE_MODULES
-    cred_params = read_config_stream(args.cred)
-    STORE = create_store_backend(**cred_params['jobs_db'])
-    CACHE = create_cache_backend(**cred_params['jobs_db'])
+    config_params = get_db_config(args.cred)
+    STORE = create_store_backend(**config_params)
+    CACHE = create_cache_backend(**config_params)
     ROOT_PATH = os.path.normpath(args.root_path)
     args.data_path = args.data_path if args.data_path is not None else args.root_path
     DATA_PATH = os.path.normpath(args.data_path)
