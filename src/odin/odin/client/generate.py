@@ -78,7 +78,6 @@ def main():
         "--odin-image", "--odin_image", help="The name of the image to use for odin exporting and odin chores."
     )
     parser.add_argument("--claim-name", "--claim_name", help="The name of the k8s pvc claim.")
-    parser.add_argument('--models-claim', "--models_claim", help="/models pvc name")
     parser.add_argument(
         "--pull-policy",
         "--pull_policy",
