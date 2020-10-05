@@ -14,15 +14,15 @@ jobs:
           with:
               ref: ${{ github.head_ref }}
               token: ${{ secrets.MACHINE_PAT }}
-        - name: Build & Push midgard Docker image with CUDA 10.1
-          uses: docker/build-push-action@v1
-          with:
-              username: ${{ secrets.DOCKER_USERNAME }}
-              password: ${{ secrets.DOCKER_PASSWORD }}
-              repository: interactions/midgard
-              dockerfile: src/midgard/Dockerfile.cuda101
-              path: src/midgard
-              tags: latest
+        #- name: Build & Push midgard Docker image with CUDA 10.1
+        #  uses: docker/build-push-action@v1
+        #  with:
+        #      username: ${{ secrets.DOCKER_USERNAME }}
+        #      password: ${{ secrets.DOCKER_PASSWORD }}
+        #      repository: interactions/midgard
+        #      dockerfile: src/midgard/Dockerfile.cuda101
+        #      path: src/midgard
+        #      tags: latest
         - name: Build & Push odin image
           uses: docker/build-push-action@v1
           with:
