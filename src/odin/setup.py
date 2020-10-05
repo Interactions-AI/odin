@@ -31,6 +31,8 @@ setup(
         'shortid',
         'GitPython',
         'pymongo',
+        'SQLAlchemy',
+        'psycopg2-binary',
         'ruamel.yaml',
         'cachetools',
         'prompt_toolkit >= 2.0.0',
