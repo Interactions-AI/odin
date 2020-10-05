@@ -85,17 +85,15 @@ def test_get_images_values():
         template_override = None if random.choice([True, False]) else rand_str()
         hpctl_override = None if random.choice([True, False]) else rand_str()
         claim_override = None if random.choice([True, False]) else rand_str()
-        models_override = None if random.choice([True, False]) else rand_str()
 
         with patch('odin.generate.read_config_file') as read_patch:
             read_patch.return_value = defaults
-            images, claims = get_images(rand_str(), mead_override, odin_override, claim_override, models_override)
+            images, claims = get_images(rand_str(), mead_override, odin_override, claim_override)
             assert images['mead'] == mead_override or defaults['mead-image']
             assert images['odin'] == odin_override or defaults['odin-image']
             assert images['template'] == odin_override or defaults['template-image']
             assert images['hpctl'] == odin_override or defaults['hpctl-image']
             assert claims['data'] == claim_override or defaults['claim-name']
-            assert claims['models'] == models_override or defaults['models-claim']
 
     for _ in range(100):
         test()
