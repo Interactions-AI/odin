@@ -162,7 +162,6 @@ If you are used to `kubectl`, prefixing it each time with `microk8s` is obnoxiou
 alias kubectl='microk8s kubectl'
 ```
 
-
 ## Setting up PostgreSQL
 
 We are going to need a database to store our jobs and usernames.  Odin
@@ -208,13 +207,12 @@ Now we want to restart our server
 $ sudo service postgresql restart
 ```
 
-## Installing Odin Locally
+## Installing Odin Core Locally
 
 We now have our database set up for Odin, but we need a few more things
 
 - A secret for our odin credentials
 - A persistent volume and persistent volume claim we can use to access pipelines and save results
-- Setting up a pipelines and datasets
 - Optional: a local private registry
 ### Setting up the odin-cred secret
 
@@ -376,7 +374,7 @@ k8s/local$ kubectl apply -f pvc/data-rw-many.yml
 persistentvolumeclaim/data-rw-many unchanged
 ```
 
-### Set up the Odin server
+### Set up the Odin WebSocket server
 
 
 Once we have the odin-cred secret, we should be able to boot the core websocket server.  If you have problems with running from a localhost database:
@@ -515,6 +513,187 @@ kubernetes   ClusterIP   10.152.183.1    <none>        443/TCP     16h
 odin         ClusterIP   10.152.183.71   <none>        30000/TCP   24s
 
 ```
+
+## Setting up a Git Repository for your pipelines
+
+While the core of odin does not enforce any particular way of storing pipelines, a common pattern is to put the pipelines in git and use that as a backend.  In fact, the HTTP server provides API calls to push resources into a git repository and to sync those resources as well.  The way this typically works is
+
+1. Create a git repository on a server that will host our repository (e.g. GitLab or Github)
+1. Set up key-based authentication
+1. Create a secret using this key-based authentication
+1. Optional: Set up a `CronJob` to monitor a local version of this repository on our PV
+
+We will also give the Odin HTTP server access to this repository, and when we use the API, it will sync the backend
+
+### Create a Git Repository
+
+#### Setting up a Github pipeline repository
+You can set up a git repository anyway you want, using whatever server you have, private or public.
+
+For the purposes of illustration, we can set up a repository on Github like this
+
+Github has the concept of repository level keys called [deploy keys](https://docs.github.com/en/free-pro-team@latest/developers/overview/managing-deploy-keys#deploy-keys), which this example will use to prevent giving Kubernetes access to all projects for a user.  We can (and will) set this deploy key to have write acecess to our pipeline repo, so that Odin can write back to the repository.
+
+First, [follow this procedure to generate an SSH key](https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent#generating-a-new-ssh-key)
+
+```
+ ssh-keygen -t rsa -b 4096 -C dpressel@gmail.com
+Generating public/private rsa key pair.
+Enter file in which to save the key (/home/dpressel/.ssh/id_rsa): /home/dpressel/.ssh/dk_rsa
+Enter passphrase (empty for no passphrase): 
+Enter same passphrase again: 
+Your identification has been saved in /home/dpressel/.ssh/dk_rsa.
+Your public key has been saved in /home/dpressel/.ssh/dk_rsa.pub.
+
+```
+
+Under the `Deploy Key` tab for this repository on github.com, add the public key, starting with `ssh-rsa ..`.  You can get this by doing a `cat` on the file above.
+
+Now we need to make a secret for this `ssh-key`:
+
+```
+$ kubectl create secret generic ssh-key --from-file=identity=/home/dpressel/.ssh/dk_rsa
+secret/ssh-key created
+```
+
+## Testing Odin Core
+
+Just to test, lets clone the sample repository and test that our server is working.  This should be cloned to the physical location that we identified in our PV.
+
+```
+$ git clone https://github.com/dpressel/sample-odin-pipelines.git pipelines
+```
+
+We know that the odin websocket server is running, but to see it on the local machine, we need to port-forward:
+
+```
+kubectl port-forward svc/odin 30000:30000
+Forwarding from 127.0.0.1:30000 -> 30000
+Forwarding from [::1]:30000 -> 30000
+```
+
+Now in another area, we can task a job.  Any directory with a `main.yml` in the pipelines area can be executed:
+
+```
+$ ls -l pipelines/sst2/
+total 8
+-rw-r--r-- 1 dpressel dpressel 438 Oct  6 14:56 main.yml
+-rw-r--r-- 1 dpressel dpressel 495 Oct  6 14:49 sst2.yml
+```
+
+We are going to run a job using Odin Core.  This is a web-socket server with no authentication, so you wouldn't really want to typically use this service publicly, but it does allow us to test that everything is working locally before we worry about the HTTP tier:
+
+```
+$ odin-run sst2 --scheme ws
+flow-vqwigjej
+Submitting flow-vqwigjej--sst2
+
+$ odin-run sst2 --scheme ws
+flow-vejwy0qj
+Submitting flow-vejwy0qj--sst2
+$ odin-status flow-vejwy0qj --scheme ws
+flow-vejwy0qj --> RUNNING
+Started       --> 2020-10-06T18:59:35.297812
+
+task                 | status    | command     | resource_id         | submitted                 
+---------------------|-----------|-------------|---------------------|---------------------------
+flow-vejwy0qj--sst2  | executing | mead-train  | flow-vejwy0qj--sst2 | 2020-10-06T18:59:35.305854
+flow-vejwy0qj--after | waiting   | odin-chores | None                | 2020-10-06T18:59:35.308448
+$ odin-logs flow-vejwy0qj--sst2 --scheme ws
+Reading config file '/data/pipelines/sst2/sst2.yml'
+Reading config file '/data/pipelines/logging.json'
+No file found '/data/mead-s...', loading as string
+Warning: no mead-settings file was found at [/data/mead-settings.json]
+Reading config file '/usr/mead/mead-baseline/mead/config/datasets.json'
+Reading config file '/usr/mead/mead-baseline/mead/config/embeddings.json'
+Reading config file '/usr/mead/mead-baseline/mead/config/vecs.json'
+Task: [classify]
+using /root/.bl-data as data/embeddings cache
+User requesting eager disabled on 2.x
+Clean
+extracting file..
+downloaded data saved in /root/.bl-data/31eb669609c65af3aa68a381fc760c4eaf801917
+[train file]: /root/.bl-data/31eb669609c65af3aa68a381fc760c4eaf801917/stsa.binary.phrases.train
+[valid file]: /root/.bl-data/31eb669609c65af3aa68a381fc760c4eaf801917/stsa.binary.dev
+[test file]: /root/.bl-data/31eb669609c65af3aa68a381fc760c4eaf801917/stsa.binary.test
+
+
+```
+We should see something like this in `nvidia-smi`:
+
+```
+$ nvidia-smi 
+Tue Oct  6 15:03:35 2020       
++-----------------------------------------------------------------------------+
+| NVIDIA-SMI 418.39       Driver Version: 418.39       CUDA Version: 10.1     |
+|-------------------------------|----------------------|----------------------+
+| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+|===============================+======================+======================|
+|   0  GeForce GTX 108...  Off  | 00000000:01:00.0  On |                  N/A |
+| 29%   35C    P2   103W / 250W |   5573MiB / 11175MiB |     87%      Default |
++-------------------------------|----------------------|----------------------+
+                                                                               
++-----------------------------------------------------------------------------+
+| Processes:                                                       GPU Memory |
+|  GPU       PID   Type   Process name                             Usage      |
+|=============================================================================|
+|    0     17871      C   /usr/bin/python3                            4783MiB |
+...
++-----------------------------------------------------------------------------+
+
+```
+And the job should finish in a minute or so.
+
+```
+$ odin-status flow-vqwigjej --scheme ws
+flow-vqwigjej --> DONE
+Started       --> 2020-10-06T19:17:37.677256
+
+       task = flow-vqwigjej--sst2
+     status = executed
+    command = mead-train
+resource_id = flow-vqwigjej--sst2
+  submitted = 2020-10-06T19:17:37.682664
+
+```
+The job database record should look like this:
+
+```
+$ odin-data flow-vqwigjej --scheme ws
+{"success": true, "jobs": {"label": "flow-vqwigjej", "job": "sst2", "status": "DONE", "submit_time": {"$date": 1602011857677}, "version": "d0a348f3a38edef854fcd6dd0d8b666b02751632", "parent": null, "executed": ["flow-vqwigjej--sst2"], "waiting": [], "executing": [], "error_message": null, "jobs": ["flow-vqwigjej--sst2"]}}
+
+```
+And the task that it executed should look like this:
+
+```
+$ odin-data flow-vqwigjej--sst2 --scheme ws
+{"success": true, "jobs": {"label": "flow-vqwigjej--sst2", "job": null, "status": null, "submit_time": {"$date": 1602011857682}, "version": null, "parent": "flow-vqwigjej", "command": "mead-train", "name": "sst2", "image": "meadml/mead2-tf2-gpu:latest", "args": ["--basedir", "/data/odin/flow-vqwigjej/flow-vqwigjej--sst2", "--config", "/data/pipelines/sst2/sst2.yml", "--logging", "/data/pipelines/logging.json"], "resource_type": "Pod", "node_selector": null, "pull_policy": null, "num_gpus": 1, "outputs": null, "inputs": null, "resource_id": "flow-vqwigjej--sst2"}}
+
+```
+We can clean up all traces of the job by explicitly telling odin to delete its file-system and database records:
+
+```
+$ odin-cleanup --db --fs flow-vqwigjej --scheme ws
+Results of this request:
+task_id             | cleaned_from_k8s | purged_from_db | removed_from_fs
+--------------------|------------------|----------------|----------------
+flow-vqwigjej       | No               | Yes            | Yes            
+flow-vqwigjej--sst2 | Yes              | Yes            | Yes    
+
+$ odin-data flow-vqwigjej--sst2 --scheme ws
+{"status": "ERROR", "response": "'No job flow-vqwigjej--sst2 found in jobs DB'"}
+$ odin-data flow-vqwigjej --scheme ws
+{"status": "ERROR", "response": "'No job flow-vqwigjej found in jobs DB'"}
+
+```
+
+Now we know that Odin Core, the web socket tier is working as expected and that we are able to run pipelines locally.  Next we need to set up our hardware monitoring service (midgard) and our HTTP server
+
+## Setting up midgard
+
+## Setting up the Odin HTTP Server
+
 
 
 ### Talking to the odin server
