@@ -1,5 +1,12 @@
 # Installing Odin from scratch on microk8s on Ubuntu
 
+## Talking to the odin server
+To make client side commands to Odin, we will need to install the `odin-ml` package, which contains the core code and the client access APIs:
+
+```
+pip install odin-ml
+```
+
 
 ## Installing Microk8s
 
@@ -556,6 +563,25 @@ $ kubectl create secret generic ssh-key --from-file=identity=/home/dpressel/.ssh
 secret/ssh-key created
 ```
 
+The other thing we need to do is create a configmap which contains the known_hosts entry (or public key) and which references our secret
+
+```
+apiVersion: v1
+data:
+  known_hosts: |
+    {VALUE_FROM_KNOWN_HOSTS_CONTAINING_DEPLOY_KEY}
+  ssh_config: |
+    Host *
+    StrictHostKeyChecking yes
+    IdentityFile /etc/odind/identity
+kind: ConfigMap
+metadata:
+  name: ssh-config
+  namespace: default
+  selfLink: /api/v1/namespaces/default/configmaps/ssh-config
+```
+
+
 ## Testing Odin Core
 
 Just to test, lets clone the sample repository and test that our server is working.  This should be cloned to the physical location that we identified in our PV.
@@ -690,21 +716,143 @@ $ odin-data flow-vqwigjej --scheme ws
 
 Now we know that Odin Core, the web socket tier is working as expected and that we are able to run pipelines locally.  Next we need to set up our hardware monitoring service (midgard) and our HTTP server
 
-## Setting up midgard
-
 ## Setting up the Odin HTTP Server
 
-
-
-### Talking to the odin server
-To make client side commands to Odin, we will need to install the `odin-ml` package, which contains the core code and the client access APIs:
+The YAML file for the `deployment` of Odin HTTP should look like this:
 
 ```
-pip install odin-ml
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  generation: 1
+  labels:
+    app: odin-http
+  name: odin-http
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: odin-http
+  template:
+    metadata:
+      labels:
+        app: odin-http
+    spec:
+      serviceAccountName: odin
+      volumes:
+      - name: data-rw-many
+        persistentVolumeClaim:
+          claimName: data-rw-many
+      - name: ssh-key
+        secret:
+          secretName: ssh-key
+          defaultMode: 0400
+      - name: ssh-config
+        configMap:
+          name: ssh-config
+      - name: odin-cred
+        secret:
+          secretName: odin-cred
+      imagePullSecrets:
+      - name: registry
+      containers:
+      - name: odin-http
+        image: interactions/odin-ml-http
+        imagePullPolicy: Always
+        env:
+        - name: ODIN_GIT_NAME
+          value: {MACHINE_USER_NAME}
+        - name: ODIN_GIT_EMAIL
+          value: {EMAIL_FOR_MACHINE_USER}
+        - name: ODIN_AUTH_ISSUER
+          value: 'com.interactions'
+        - name: ODIN_SECRET
+          value: {SECRET_STRING}
+        - name: ODIN_SALT
+          value: {BCRYPT_SALT}
+        args:
+        - --host
+        - odin
+        - --root_path
+        - /data/pipelines
+        - --scheme
+        - ws
+        - --cred
+        - /etc/odind/odin-cred.yml
+        ports:
+        - containerPort: 9003
+        volumeMounts:
+        - mountPath: /data
+          name: data-rw-many
+        - name: odin-cred
+          mountPath: /etc/odind/odin-cred.yml
+          subPath: odin-cred.yml
+        - name: ssh-config
+          mountPath: /etc/ssh/ssh_config
+          subPath: ssh_config
+        - name: ssh-config
+          mountPath: /etc/ssh/ssh_known_hosts
+          subPath: known_hosts
+        - name: ssh-key
+          mountPath: /etc/odind/identity
+          subPath: identity
+
+```
+Now we can start the deployment:
+
 ```
 
+$ kubectl apply -f deployments/odin-http.yml
 
+```
 
+As for the Odin Core WebSocket server, we also need a service running:
+
+```
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: odin-http
+  name: odin-http
+spec:
+  selector:
+    app: odin-http
+  ports:
+    - name: http-server
+      port: 9003
+      targetPort: 9003
+  type: ClusterIP
+status:
+  loadBalancer: {}
+
+```
+
+And we will also start the server
+
+```
+$ kubectl apply -f services/odin-http.yml
+$ kubectl get deployments
+NAME        READY   UP-TO-DATE   AVAILABLE   AGE
+odin        1/1     1            1           4h31m
+odin-http   1/1     1            1           4h31m
+
+$ kubectl get svc
+NAME         TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)     AGE
+kubernetes   ClusterIP   10.152.183.1     <none>        443/TCP     23h
+odin         ClusterIP   10.152.183.71    <none>        30000/TCP   6h56m
+odin-http    ClusterIP   10.152.183.253   <none>        9003/TCP    3m26s
+
+```
+
+To test this is all working as expected, lets set up port-forwarding and make sure we can run jobs over HTTP
+
+```
+$ kubectl port-forward svc/odin-http 9003:9003
+Forwarding from 127.0.0.1:9003 -> 9003
+Forwarding from [::1]:9003 -> 9003
+
+```
 ### Developing on Odin from source (TODO)
 
 To install from scratch you will first need to clone odin
@@ -719,4 +867,6 @@ There are 3 sub-systems of Odin that we need to install
 - *midgard*: a daemonset that should be deployed on each node in the cluster. It tracks system resource usage and is aggregated by the *http api* layer.  This layer depends on `pynvml`, a python interface to the NVML library
 - *http api*: A web server that communicates over HTTP.  This layer depends on the `odin_db` database (PostgreSQL-backed)
 
+
+## Setting up midgard
 
