@@ -957,6 +957,14 @@ processes = /usr/bin/python3.6
 
 ```
 
+```
+odin-cleanup --db --fs bert-ner-n-90jncj --scheme http
+Results of this request:
+task_id                    | cleaned_from_k8s | purged_from_db | removed_from_fs
+---------------------------+------------------+----------------+----------------
+bert-ner-n-90jncj          | No               | Yes            | Yes            
+bert-ner-n-90jncj--conll-0 | Yes              | Yes            | Yes            
+```
 
 ### Developing on Odin from source (TODO)
 
