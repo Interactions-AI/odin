@@ -401,12 +401,7 @@ or, if using ufw:
 
 This answer is taken directly from [My pods can't reach the internet or each other (but my MicroK8s host machine can)](https://microk8s.io/docs/troubleshooting#heading--common-issues).
 
-There is a slightly different command set [listed here](https://ubuntu.com/tutorials/install-a-local-kubernetes-with-microk8s#2-deploying-microk8s):
-
-```
-sudo ufw allow in on cni0 && sudo ufw allow out on cni0
-sudo ufw default allow routed
-```
+The Ubuntu tutorials have some more information [here](https://ubuntu.com/tutorials/install-a-local-kubernetes-with-microk8s#2-deploying-microk8s)
 
 First, we need a deployment file.  It should look like this:
 
@@ -961,7 +956,7 @@ processes = /usr/bin/python3.6
 odin-cleanup --db --fs bert-ner-n-90jncj --scheme http
 Results of this request:
 task_id                    | cleaned_from_k8s | purged_from_db | removed_from_fs
----------------------------+------------------+----------------+----------------
+---------------------------|------------------|----------------|----------------
 bert-ner-n-90jncj          | No               | Yes            | Yes            
 bert-ner-n-90jncj--conll-0 | Yes              | Yes            | Yes            
 ```
