@@ -763,13 +763,13 @@ spec:
         - name: ODIN_GIT_NAME
           value: {MACHINE_USER_NAME}
         - name: ODIN_GIT_EMAIL
-          value: {EMAIL_FOR_MACHINE_USER}
+          value: {MACHINE_USER_EMAIL}
         - name: ODIN_AUTH_ISSUER
           value: 'com.interactions'
         - name: ODIN_SECRET
           value: {SECRET_STRING}
         - name: ODIN_SALT
-          value: {BCRYPT_SALT}
+          value: {SALT}
         args:
         - --host
         - odin
@@ -853,6 +853,47 @@ Forwarding from 127.0.0.1:9003 -> 9003
 Forwarding from [::1]:9003 -> 9003
 
 ```
+
+Now if we run the same commands as before, but passing `--scheme http`, we should get the same behavior as before,
+but this time with a few notable differences
+
+1. We are prompted for authentication information for our user
+2. Our server is using git as a backend and automatically syncing changes in the main repository
+
+```
+$ odin-run sst2 --scheme http
+odin password: ********                          
+{"pipeline": {"id": "flow-duy0p9zj", "job": "sst2", "name": "flow-duy0p9zj"}}
+$ odin-status flow-duy0p9zj --scheme http
+flow-duy0p9zj --> RUNNING
+Started       --> 2020-10-07T01:19:39.003769
+$ odin-status flow-duy0p9zj --scheme http
+flow-duy0p9zj --> DONE
+Started       --> 2020-10-07T01:19:39.003769
+
+       task = flow-duy0p9zj--sst2
+     status = executed
+    command = mead-train
+resource_id = flow-duy0p9zj--sst2
+  submitted = 2020-10-07T01:19:39.009264
+$ odin-data flow-duy0p9zj --scheme http
+{"jobs": {"error_message": null, "executed": ["flow-duy0p9zj--sst2"], "executing": [], "job": "sst2", "jobs": ["flow-duy0p9zj--sst2"], "label": "flow-duy0p9zj", "parent": null, "status": "DONE", "submit_time": {"$date": 1602033579003}, "version": "4cba877d43b8abacc8cfa832d8b1304e6b9d7fac", "waiting": []}, "success": true}
+
+$ odin-data flow-duy0p9zj--sst2 --scheme http
+{"jobs": {"args": ["--basedir", "/data/odin/flow-duy0p9zj/flow-duy0p9zj--sst2", "--config", "/data/pipelines/sst2/sst2.yml", "--logging", "/data/pipelines/logging.json"], "command": "mead-train", "image": "meadml/mead2-tf2-gpu:latest", "inputs": null, "job": null, "label": "flow-duy0p9zj--sst2", "name": "sst2", "node_selector": null, "num_gpus": 1, "outputs": null, "parent": "flow-duy0p9zj", "pull_policy": null, "resource_id": "flow-duy0p9zj--sst2", "resource_type": "Pod", "status": null, "submit_time": {"$date": 1602033579009}, "version": null}, "success": true}
+
+```
+
+The job we ran was a single task -- it trained a classifier on a dataset and saved the resulting model to the location given in the basedir above:
+
+```
+
+$ ls odin/flow-duy0p9zj/
+flow-duy0p9zj--sst2  flow-duy0p9zj--sst2-1.zip  sst2
+```
+
+
+
 ### Developing on Odin from source (TODO)
 
 To install from scratch you will first need to clone odin
