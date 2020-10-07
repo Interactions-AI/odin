@@ -399,7 +399,7 @@ You can set up a git repository anyway you want, using whatever server you have,
 
 First, we will set up a repository. If you want to use the repository here as a starting, you can also just fork this sample repository here and set up your own key access.
 
-![Creating a pipeline repository](./images/create-pipeline-repo.png]
+![Creating a pipeline repository](images/create-pipeline-repo.png)
 
 Now that we have a repository, we need to create key access for Odin.
 
