@@ -42,6 +42,8 @@ import time
 from jose import jwt
 from swagger_server.models.orm import User
 
+# This indicates what branch we should be looking at in git for its pipelines
+PIPELINES_MAIN = os.environ.get('ODIN_PIPELINES_MAIN', 'master')
 JWT_ISSUER = os.environ.get('ODIN_AUTH_ISSUER', 'com.interactions')
 JWT_SECRET = os.environ.get('ODIN_SECRET')
 JWT_LIFETIME_SECONDS = os.environ.get('ODIN_TOKEN_DURATION', 60 * 60 * 12)
@@ -136,7 +138,7 @@ def _get_job_repo_sha() -> str:
 
 
 def _repo_version_match(repos: git.Repo) -> bool:
-    master_version = str(git.repo.fun.rev_parse(repos, 'origin/master'))
+    master_version = str(git.repo.fun.rev_parse(repos, f'origin/{PIPELINES_MAIN}'))
     head_version = str(git.repo.fun.rev_parse(repos, 'HEAD'))
     return master_version == head_version
 
@@ -148,7 +150,7 @@ def _stash_pull_pop(repo: git.Repo):
         repo.git.stash()
 
     if not _repo_version_match(repo):
-        repo.git.pull('--rebase', 'origin', 'master')
+        repo.git.pull('--rebase', 'origin', f'{PIPELINES_MAIN}')
 
     if do_push_pop:
         repo.git.stash('pop')
