@@ -381,6 +381,72 @@ k8s/local$ kubectl apply -f pvc/data-rw-many.yml
 persistentvolumeclaim/data-rw-many unchanged
 ```
 
+
+### Setting up a Git Repository for your pipelines
+
+While Odin Core does not enforce any particular way of storing pipelines, a common pattern is to put the pipelines in git and use that as a backend.  If you plan on using Odin HTTP, access to a Git-backed pipeline area is required.  The Odin HTTP service syncs the backend automatically using a key, so that when you task a job, it always fetches the latest version from the remote branch.  The way this typically works is
+
+1. Create a git repository on a server that will host our repository (e.g. GitLab or Github)
+1. Set up key-based authentication
+1. Create a secret using this key-based authentication
+1. Optional: Set up a `CronJob` to monitor a local version of this repository on our PV
+
+We will also give the Odin HTTP server access to this repository, and when we use the API, it will sync the backend
+
+You can set up a git repository anyway you want, using whatever server you have, private or public.
+
+#### Setting up a Github pipeline repository
+
+First, we will set up a repository. If you want to use the repository here as a starting, you can also just fork this sample repository here and set up your own key access.
+
+![Creating a pipeline repository](/images/create-pipeline-repo.png]
+
+Now that we have a repository, we need to create key access for Odin.
+
+Github has the concept of repository-level keys called [deploy keys](https://docs.github.com/en/free-pro-team@latest/developers/overview/managing-deploy-keys#deploy-keys), which this example will use to prevent giving Kubernetes access to all projects for a user.  We can (and will) set this deploy key to have write acecess to our pipeline repo, so that Odin can write back to the repository.
+
+First, [follow this procedure to generate an SSH key](https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent#generating-a-new-ssh-key)
+
+```
+ ssh-keygen -t rsa -b 4096 -C dpressel@gmail.com
+Generating public/private rsa key pair.
+Enter file in which to save the key (/home/dpressel/.ssh/id_rsa): /home/dpressel/.ssh/dk_rsa
+Enter passphrase (empty for no passphrase): 
+Enter same passphrase again: 
+Your identification has been saved in /home/dpressel/.ssh/dk_rsa.
+Your public key has been saved in /home/dpressel/.ssh/dk_rsa.pub.
+
+```
+
+Under the `Deploy Key` tab for this repository on github.com, add the public key, starting with `ssh-rsa ..`.  You can get this by doing a `cat` on the file above.
+
+Now we need to make a secret for this `ssh-key`:
+
+```
+$ kubectl create secret generic ssh-key --from-file=identity=/home/dpressel/.ssh/dk_rsa
+secret/ssh-key created
+```
+
+The other thing we need to do is create a configmap which contains the known_hosts entry (or public key) and which references our secret
+
+```
+apiVersion: v1
+data:
+  known_hosts: |
+    {VALUE_FROM_KNOWN_HOSTS_CONTAINING_DEPLOY_KEY}
+  ssh_config: |
+    Host *
+    StrictHostKeyChecking yes
+    IdentityFile /etc/odind/identity
+kind: ConfigMap
+metadata:
+  name: ssh-config
+  namespace: default
+  selfLink: /api/v1/namespaces/default/configmaps/ssh-config
+```
+
+
+
 ### Set up the Odin WebSocket server
 
 
@@ -515,72 +581,6 @@ kubernetes   ClusterIP   10.152.183.1    <none>        443/TCP     16h
 odin         ClusterIP   10.152.183.71   <none>        30000/TCP   24s
 
 ```
-
-## Setting up a Git Repository for your pipelines
-
-While Odin Core does not enforce any particular way of storing pipelines, a common pattern is to put the pipelines in git and use that as a backend.  If you plan on using Odin HTTP, access to a Git-backed pipeline area is required.  The Odin HTTP service syncs the backend automatically using a key, so that when you task a job, it always fetches the latest version from the remote branch.  The way this typically works is
-
-1. Create a git repository on a server that will host our repository (e.g. GitLab or Github)
-1. Set up key-based authentication
-1. Create a secret using this key-based authentication
-1. Optional: Set up a `CronJob` to monitor a local version of this repository on our PV
-
-We will also give the Odin HTTP server access to this repository, and when we use the API, it will sync the backend
-
-### Create a Git Repository
-
-You can set up a git repository anyway you want, using whatever server you have, private or public.
-
-#### Setting up a Github pipeline repository
-
-First, we will set up a repository. If you want to use the repository here as a starting, you can also just fork this sample repository here and set up your own key access.
-
-![Creating a pipeline repository](docs/images/create-pipeline-repo.png]
-
-Now that we have a repository, we need to create key access for Odin.
-
-Github has the concept of repository-level keys called [deploy keys](https://docs.github.com/en/free-pro-team@latest/developers/overview/managing-deploy-keys#deploy-keys), which this example will use to prevent giving Kubernetes access to all projects for a user.  We can (and will) set this deploy key to have write acecess to our pipeline repo, so that Odin can write back to the repository.
-
-First, [follow this procedure to generate an SSH key](https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent#generating-a-new-ssh-key)
-
-```
- ssh-keygen -t rsa -b 4096 -C dpressel@gmail.com
-Generating public/private rsa key pair.
-Enter file in which to save the key (/home/dpressel/.ssh/id_rsa): /home/dpressel/.ssh/dk_rsa
-Enter passphrase (empty for no passphrase): 
-Enter same passphrase again: 
-Your identification has been saved in /home/dpressel/.ssh/dk_rsa.
-Your public key has been saved in /home/dpressel/.ssh/dk_rsa.pub.
-
-```
-
-Under the `Deploy Key` tab for this repository on github.com, add the public key, starting with `ssh-rsa ..`.  You can get this by doing a `cat` on the file above.
-
-Now we need to make a secret for this `ssh-key`:
-
-```
-$ kubectl create secret generic ssh-key --from-file=identity=/home/dpressel/.ssh/dk_rsa
-secret/ssh-key created
-```
-
-The other thing we need to do is create a configmap which contains the known_hosts entry (or public key) and which references our secret
-
-```
-apiVersion: v1
-data:
-  known_hosts: |
-    {VALUE_FROM_KNOWN_HOSTS_CONTAINING_DEPLOY_KEY}
-  ssh_config: |
-    Host *
-    StrictHostKeyChecking yes
-    IdentityFile /etc/odind/identity
-kind: ConfigMap
-metadata:
-  name: ssh-config
-  namespace: default
-  selfLink: /api/v1/namespaces/default/configmaps/ssh-config
-```
-
 
 ## Testing Odin Core
 
