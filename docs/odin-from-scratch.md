@@ -230,7 +230,7 @@ The configuration should look something like this:
 
 ```
 jobs_db:
-    host: localhost
+    host: 10.0.1.1
     passwd: {YOUR_PG_PASSWORD}
     port: 5432
     backend: postgres
@@ -242,7 +242,7 @@ reporting_db:
     user: {YOUR_REPORTING_USERNAME}
     host: "0.0.0.0:31458/v2"
 odin_db:
-    dbhost: localhost
+    dbhost: 10.0.1.1
     dbport: 5432
     passwd: {YOUR_PG_PASSWORD} 
     user: {YOUR_PG_USERNAME}
@@ -399,7 +399,7 @@ You can set up a git repository anyway you want, using whatever server you have,
 
 First, we will set up a repository. If you want to use the repository here as a starting, you can also just fork this sample repository here and set up your own key access.
 
-![Creating a pipeline repository](/images/create-pipeline-repo.png]
+![Creating a pipeline repository](./images/create-pipeline-repo.png]
 
 Now that we have a repository, we need to create key access for Odin.
 
@@ -716,6 +716,63 @@ $ odin-data flow-vqwigjej --scheme ws
 
 Now we know that Odin Core, the web socket tier is working as expected and that we are able to run pipelines locally.  Next we need to set up our hardware monitoring service (midgard) and our HTTP server
 
+## Setting up the Midgard Daemonset
+
+Midgard is a daemonset meaning it will be deployed like a server on every node in our cluster.
+It provides detailed information about the hardware utilization on a node, particularly GPU statistics.
+To do this, it uses NVML, which is part of the nvidia container runtime.  The Odin HTTP server talks to
+all of the nodes' Midgard deployments and aggregates this information into a single service available
+through the API (You can think of this like an `nvidia-smi` that works over a whole cluster, but as a web service)
+
+
+The YAML configuration looks like this:
+
+```
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: midgard
+  namespace: default
+  labels:
+    app: midgard
+spec:
+  selector:
+    matchLabels:
+      name: midgard
+  template:
+    metadata:
+      labels:
+        name: midgard
+    spec:
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+      containers:
+      - image: interactions/midgard
+        name: midgard
+        ports:
+        - name: midgard
+          containerPort: 29999
+          hostPort: 29999
+
+      hostNetwork: true
+      hostPID: true
+
+```
+
+And we launch the daemonset like this
+
+```
+$ kubectl apply -f daemonsets/midgard.yml
+$ kubectl get daemonsets
+NAME      DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR   AGE
+midgard   1         1         1       1            1           <none>          12h
+
+
+```
+
+
+
 ## Setting up the Odin HTTP Server
 
 The YAML file for the `deployment` of Odin HTTP should look like this:
@@ -966,20 +1023,57 @@ bert-ner-n-90jncj          | No               | Yes            | Yes
 bert-ner-n-90jncj--conll-0 | Yes              | Yes            | Yes            
 ```
 
-### Developing on Odin from source (TODO)
+### Developing on Odin from source
 
-To install from scratch you will first need to clone odin
+For developers working on Odin, its fairly easy with microk8s to set some portions of Odin running in Kubernetes while running 
+other portions under development outside of microk8s.  For example, its fairly easy to get the Odin Core up and
+running if you have your persistent volumes set up in a microk8s repository and a PostgreSQL database set up on
+the host machine.
+
+To install from scratch you will first need to clone odin:
 
 ```
 git clone git@github.com:Interactions-AI/odin.git
 ```
 
-There are 3 sub-systems of Odin that we need to install
+#### Odin Core
 
-- *core*: the core system containing the DAG and Executor, along with the Handlers that can communicate with the APIs of the CRDs or Pods. This contains a lightweight web-socket server that will be run in the cluster and can be tasked by the *http api* layer.  This layer depends on the `odin_jobs` database (MongoDB or PostgreSQL backed) and the `kubernetes-client` Python library, which is used to schedule pods. 
-- *midgard*: a daemonset that should be deployed on each node in the cluster. It tracks system resource usage and is aggregated by the *http api* layer.  This layer depends on `pynvml`, a python interface to the NVML library
-- *http api*: A web server that communicates over HTTP.  This layer depends on the `odin_db` database (PostgreSQL-backed)
+We still need to set up the 
+1. PV/PVC
+1. PostgreSQL Database
+1. Git repository for Pipelines
+1. MicroK8s with the `host-access` set up
+
+Instead of pip installing `odin-ml`, do a `pip install -e .` in the `{basepath}/src/odin` directory
+For accessing the database, you can use an `odin-cred.yml` (like the example above) or you can
+define a set of environment variables containing the database information:
+
+*With Config*
+```
+odin-serve --root_path /data/pipelines --modules core --cred {path/to}/config/odin-cred.yml
+```
+*With env variables*
+
+```
+export DB_USER={LOCAL_DB_USER}
+export DB_PASS={LOCAL_DB_PASSWORD}
+export DB_NAME=jobs_db
+export SQL_HOST=0.0.0.0
+odin-serve --root_path /data/pipelines --modules core
+```
+
+If you are using an IDE like PyCharm, `odin-serve` is just an alias for
+
+```
+python {basepath}/src/odin/odin/serve.py
+```
+
+So, e.g., in PyCharm you would put that path in your `Script Path` and you would put the command line arguments
+in your `Parameters` for that job.  If you are using environment variables for the database, you would
+put those definitions into the `Environment Variables`, and then you can debug the program
+right in the IDE.
+
+#### Midgard from source (TODO)
 
 
-## Setting up midgard
-
+#### Odin HTTP from source (TODO)
