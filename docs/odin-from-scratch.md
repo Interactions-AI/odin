@@ -892,6 +892,70 @@ $ ls odin/flow-duy0p9zj/
 flow-duy0p9zj--sst2  flow-duy0p9zj--sst2-1.zip  sst2
 ```
 
+We can also check if midgard is running as expected by checking the GPU status:
+
+```
+$ odin-gpus --scheme http
+     host = {HOSTNAME}
+      gpu = 01
+     type = GeForce GTX 1080 Ti
+     free = YES
+processes = 
+     pids = 
+
+$ odin-run bert-ner --scheme http
+{"pipeline": {"id": "bert-ner-n-90jncj", "job": "bert-ner", "name": "bert-ner-n-90jncj"}}
+$ odin-status bert-ner --scheme http
+bert-ner-n-90jncj --> RUNNING
+Started           --> 2020-10-07T01:37:59.621467
+
+       task = bert-ner-n-90jncj--conll-0
+     status = executing
+    command = mead-train
+resource_id = bert-ner-n-90jncj--conll-0
+  submitted = 2020-10-07T01:37:59.625438
+
+$ odin-logs bert-ner-n-90jncj--conll-0 --scheme ws --port 30000
+Reading config file '/data/pipelines/bert-ner/conll-bert.yml'
+Reading config file '/data/pipelines/logging.json'
+Reading config file '/usr/mead/mead-baseline/mead/config/mead-settings.json'
+Reading config file '/usr/mead/mead-baseline/mead/config/datasets.json'
+Reading config file '/usr/mead/mead-baseline/mead/config/embeddings.json'
+Reading config file '/usr/mead/mead-baseline/mead/config/vecs.json'
+Task: [tagger]
+using /root/.bl-data as data/embeddings cache
+using /root/.bl-data as data/embeddings cache
+extracting file..
+downloaded data saved in /root/.bl-data/5d1e88f12c21d38f424afc168004ae14a60d91cd
+extracting file..
+downloaded data saved in /root/.bl-data/80b0a839a7edd4c99f54537aa83327340592a4e8
+[train file]: /root/.bl-data/80b0a839a7edd4c99f54537aa83327340592a4e8/eng.train.iobes
+[valid file]: /root/.bl-data/80b0a839a7edd4c99f54537aa83327340592a4e8/eng.testa.iobes
+[test file]: /root/.bl-data/80b0a839a7edd4c99f54537aa83327340592a4e8/eng.testb.iobes
+extracting file..
+downloaded data saved in /root/.bl-data/b28358911296329a1623a8d8d00517bbf7177fe0
+embedding file location: /root/.bl-data/b28358911296329a1623a8d8d00517bbf7177fe0
+model file [/data/odin/bert-ner-n-90jncj/bert-ner-n-90jncj--conll-0/tagger-model-1.pyt]
+Doing early stopping on [f1] with patience [15]
+reporting [<bound method EpochReportingHook.step of <baseline.reporting.LoggingReporting object at 0x7f6d4a340d68>>]
+Calling model <function register_model.<locals>.create at 0x7f6ce8f0d840>
+Setting span type iobes
+adam(eta=0.000010, beta1=0.900000, beta2=0.999000, epsilon=0.000000, wd=0.000000)
+{"tick_type": "EPOCH", "tick": 1, "phase": "Train", "avg_loss": 2.9781815746877784, "lr": 1e-05}
+{"tick_type": "EPOCH", "tick": 1, "phase": "Train", "time": 49.466657638549805, "step/sec": 0.020215637112718347}
+{"tick_type": "EPOCH", "tick": 1, "phase": "Valid", "acc": 0.9749699484276242, "f1": 0.8656616973432165}
+{"tick_type": "EPOCH", "tick": 1, "phase": "Valid", "time": 20.68245816230774, "step/sec": 0.048350152199143646}
+New best 0.866
+
+$ odin-gpus --scheme http
+     host = {HOSTNAME}
+      gpu = 01
+     type = GeForce GTX 1080 Ti
+     free = NO
+processes = /usr/bin/python3.6
+     pids = 3171
+
+```
 
 
 ### Developing on Odin from source (TODO)
