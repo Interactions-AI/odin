@@ -518,7 +518,7 @@ odin         ClusterIP   10.152.183.71   <none>        30000/TCP   24s
 
 ## Setting up a Git Repository for your pipelines
 
-While the core of odin does not enforce any particular way of storing pipelines, a common pattern is to put the pipelines in git and use that as a backend.  In fact, the HTTP server provides API calls to push resources into a git repository and to sync those resources as well.  The way this typically works is
+While Odin Core does not enforce any particular way of storing pipelines, a common pattern is to put the pipelines in git and use that as a backend.  If you plan on using Odin HTTP, access to a Git-backed pipeline area is required.  The Odin HTTP service syncs the backend automatically using a key, so that when you task a job, it always fetches the latest version from the remote branch.  The way this typically works is
 
 1. Create a git repository on a server that will host our repository (e.g. GitLab or Github)
 1. Set up key-based authentication
@@ -529,12 +529,17 @@ We will also give the Odin HTTP server access to this repository, and when we us
 
 ### Create a Git Repository
 
-#### Setting up a Github pipeline repository
 You can set up a git repository anyway you want, using whatever server you have, private or public.
 
-For the purposes of illustration, we can set up a repository on Github like this
+#### Setting up a Github pipeline repository
 
-Github has the concept of repository level keys called [deploy keys](https://docs.github.com/en/free-pro-team@latest/developers/overview/managing-deploy-keys#deploy-keys), which this example will use to prevent giving Kubernetes access to all projects for a user.  We can (and will) set this deploy key to have write acecess to our pipeline repo, so that Odin can write back to the repository.
+First, we will set up a repository. If you want to use the repository here as a starting, you can also just fork this sample repository here and set up your own key access.
+
+![Creating a pipeline repository](docs/images/create-pipeline-repo.png]
+
+Now that we have a repository, we need to create key access for Odin.
+
+Github has the concept of repository-level keys called [deploy keys](https://docs.github.com/en/free-pro-team@latest/developers/overview/managing-deploy-keys#deploy-keys), which this example will use to prevent giving Kubernetes access to all projects for a user.  We can (and will) set this deploy key to have write acecess to our pipeline repo, so that Odin can write back to the repository.
 
 First, [follow this procedure to generate an SSH key](https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent#generating-a-new-ssh-key)
 
