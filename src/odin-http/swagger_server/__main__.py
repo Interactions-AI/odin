@@ -74,7 +74,6 @@ def main():
     app.app.root_path = args.root_path
     app.app.ws_event_loop = asyncio.new_event_loop()
     creds = get_db_config(args.cred)
-    creds = creds[ODIN_DB]
     app.app.dao = Dao(dbname=ODIN_DB, **creds)
     app.run(port=9003)
 
