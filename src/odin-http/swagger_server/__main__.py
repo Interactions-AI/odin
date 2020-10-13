@@ -2,16 +2,37 @@
 
 import logging
 import connexion
-
+from typing import Optional, Dict
 from swagger_server import encoder
 import argparse
-from baseline.utils import read_config_stream
+from eight_mile.utils import read_config_stream
 from mead.utils import convert_path
 import asyncio
 from swagger_server.models.orm import Dao
 import os
 
 ODIN_DB = os.getenv('ODIN_DB', 'odin_db')
+
+
+def get_db_config(cred: Optional[str]) -> Dict:
+    """
+
+    :param cred:
+    :return:
+    """
+    if cred:
+        cred_params = read_config_stream(cred)['jobs_db']
+
+    else:
+        cred_params = {}
+        cred_params['backend'] = os.environ.get("ODIN_JOBS_BACKEND", "postgres")
+        cred_params['host'] = os.environ.get("SQL_HOST", "127.0.0.1")
+        cred_params['port'] = os.environ.get("DB_PORT", 5432)
+        cred_params['user'] = os.environ.get("DB_USER")
+        cred_params['passwd'] = os.environ.get("DB_PASS")
+    cred_params['db'] = os.environ.get("DB_NAME", "jobs_db")
+    return cred_params
+
 
 class FilterPrometheus(logging.Filter):
     """A logging filter to ignore the fact that Prometheus tries to scrape /metrics."""
@@ -52,7 +73,7 @@ def main():
     app.app.ws_url = f'{args.scheme}://{args.host}:{args.port}'
     app.app.root_path = args.root_path
     app.app.ws_event_loop = asyncio.new_event_loop()
-    creds = read_config_stream(args.cred)
+    creds = get_db_config(args.cred)
     creds = creds[ODIN_DB]
     app.app.dao = Dao(dbname=ODIN_DB, **creds)
     app.run(port=9003)
