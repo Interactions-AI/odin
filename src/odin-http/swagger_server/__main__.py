@@ -21,7 +21,7 @@ def get_db_config(cred: Optional[str]) -> Dict:
     :return:
     """
     if cred:
-        cred_params = read_config_stream(cred)['jobs_db']
+        cred_params = read_config_stream(cred)['odin_db']
 
     else:
         cred_params = {}
@@ -30,7 +30,7 @@ def get_db_config(cred: Optional[str]) -> Dict:
         cred_params['port'] = os.environ.get("DB_PORT", 5432)
         cred_params['user'] = os.environ.get("DB_USER")
         cred_params['passwd'] = os.environ.get("DB_PASS")
-    cred_params['db'] = os.environ.get("DB_NAME", "jobs_db")
+    cred_params['db'] = os.environ.get("DB_NAME", "odin_db")
     return cred_params
 
 
