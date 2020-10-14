@@ -10,8 +10,11 @@ from mead.utils import convert_path
 import asyncio
 from swagger_server.models.orm import Dao
 import os
+import logging
 
 ODIN_DB = os.getenv('ODIN_DB', 'odin_db')
+LOGGER = logging.getLogger('odin-http')
+
 
 
 def get_db_config(cred: Optional[str]) -> Dict:
@@ -30,8 +33,10 @@ def get_db_config(cred: Optional[str]) -> Dict:
         cred_params['port'] = os.environ.get("DB_PORT", 5432)
         cred_params['user'] = os.environ.get("DB_USER")
         cred_params['passwd'] = os.environ.get("DB_PASS")
+        cred_params['odin_root_user'] = os.environ.get("ODIN_ROOT_USER")
+        cred_params['odin_root_passwd'] = os.environ.get("ODIN_ROOT_PASS")
     cred_params['db'] = ODIN_DB
-    print(cred_params['user'], cred_params['db'], cred_params['host'], cred_params['port'])
+    LOGGER.warning(cred_params['user'], cred_params['db'], cred_params['host'], cred_params['port'])
     return cred_params
 
 
