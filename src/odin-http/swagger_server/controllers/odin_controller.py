@@ -279,6 +279,10 @@ def get_user(id_):  # noqa: E501
     return UserWrapperDefinition(_to_user_def(user))
 
 
+def get_ready(q=None):
+    return "PONG"
+
+
 def get_users(q=None):  # noqa: E501
     """Get user info
 

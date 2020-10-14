@@ -20,6 +20,23 @@ tags:
     description: odin API definition
     url: https://dev-null.io
 paths:
+  /ping:
+    get:
+      tags:
+        - odin
+      summary: Readiness check
+      operationId: get_ready
+      responses:
+        200:
+          description: Provide back a result
+          content:
+            text/plain:
+              schema:
+                type: string
+                format: string
+                x-content-type: text/plain
+      x-openapi-router-controller: swagger_server.controllers.odin_controller
+
   /users:
     get:
       tags:
