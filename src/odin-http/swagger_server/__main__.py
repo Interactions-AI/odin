@@ -30,7 +30,8 @@ def get_db_config(cred: Optional[str]) -> Dict:
         cred_params['port'] = os.environ.get("DB_PORT", 5432)
         cred_params['user'] = os.environ.get("DB_USER")
         cred_params['passwd'] = os.environ.get("DB_PASS")
-    cred_params['db'] = os.environ.get("DB_NAME", "odin_db")
+    cred_params['db'] = ODIN_DB
+    print(cred_params['user'], cred_params['db'], cred_params['host'], cred_params['port'])
     return cred_params
 
 
