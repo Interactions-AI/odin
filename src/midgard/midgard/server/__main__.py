@@ -20,8 +20,8 @@ def main():
         import pynvml
         from pynvml.smi import nvidia_smi
         app.app.nvsmi = nvidia_smi.getInstance()
-    except Exception:
-        flask_logger.error("Failed to load NVML.  This node cannot produce GPU information")
+    except Exception as e:
+        flask_logger.error("Failed to load NVML.  This node cannot produce GPU information", exc_info=True)
         app.app.nvsmi = None
     app.run(port=args.port)
 
