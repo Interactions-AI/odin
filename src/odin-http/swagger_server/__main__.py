@@ -36,7 +36,7 @@ def get_db_config(cred: Optional[str]) -> Dict:
         cred_params['odin_root_user'] = os.environ.get("ODIN_ROOT_USER")
         cred_params['odin_root_passwd'] = os.environ.get("ODIN_ROOT_PASS")
     cred_params['db'] = ODIN_DB
-    LOGGER.warning(cred_params['user'], cred_params['db'], cred_params['host'], cred_params['port'])
+    LOGGER.warning('%s %s %s %s', cred_params['user'], cred_params['db'], cred_params['host'], cred_params['port'])
     return cred_params
 
 
