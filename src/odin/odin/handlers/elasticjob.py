@@ -113,9 +113,11 @@ class PyTorchElasticJobHandler(ResourceHandler):
         """
         try:
             selector = json_to_selector(
-                {PyTorchElasticJobHandler.SELECTOR: name, PyTorchElasticJobHandler.GROUP_KEY: PyTorchElasticJobHandler.GROUP}
+                {PyTorchElasticJobHandler.GROUP_KEY: PyTorchElasticJobHandler.GROUP}
             )
-            return self.core_api.list_namespaced_pod(self.namespace, label_selector=selector).items
+
+            pods = [x for x in self.core_api.list_namespaced_pod(self.namespace, label_selector=selector).items if x.metadata.name.startswith(name)]
+            return pods
         except client.rest.ApiException:
             return []
 
