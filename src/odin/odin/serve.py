@@ -21,7 +21,7 @@ from odin.generate import generate_pipeline
 from odin.executor import Executor
 from odin.status import get_status
 from odin.store import create_store_backend, create_cache_backend
-from odin.k8s import KubernetesTaskManager, DEFAULT_MODULES, CORE_MODULES
+from odin.k8s import KubernetesTaskManager, KF_MODULES, ELASTIC_MODULES, CORE_MODULES
 
 LOGGER = logging.getLogger('odin')
 
@@ -76,7 +76,7 @@ async def handle_request(websocket, _) -> None:  # pylint: disable=too-many-bran
             work_path = os.path.join(ROOT_PATH, work)
             context, tasks = read_pipeline_config(work_path, ROOT_PATH, DATA_PATH)
             LOGGER.info(context)
-            pipe = Executor(STORE, cache=CACHE)
+            pipe = Executor(STORE, cache=CACHE, modules=MODULES)
             pipe_id = context['PIPE_ID']
             try:
                 repos = git.Repo(ROOT_PATH)
@@ -192,10 +192,14 @@ def main():
     parser.add_argument('--port', default='30000')
     parser.add_argument('--cred', help='cred file', type=convert_path)
     parser.add_argument('--data_path', help='data directory')
-    parser.add_argument('--modules', default='all', choices=['all', 'core'])
+    parser.add_argument('--modules', default='all', choices=['all', 'kf', 'elastic', 'core'])
     args = parser.parse_args()
 
-    MODULES = DEFAULT_MODULES if args.modules == 'all' else CORE_MODULES
+    MODULES = CORE_MODULES
+    if args.modules in ['kf', 'all']:
+        MODULES += KF_MODULES
+    if args.modules in ['elastic', 'all']:
+        MODULES = ELASTIC_MODULES + CORE_MODULES
     config_params = get_db_config(args.cred)
     STORE = create_store_backend(**config_params)
     CACHE = create_cache_backend(**config_params)
