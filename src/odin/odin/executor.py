@@ -73,14 +73,14 @@ class Executor:
     Tasks that have no dependencies with each other are scheduled to be run in parallel
     """
 
-    def __init__(self, store: Store, sched: TaskManager = None, cache: Optional[Cache] = None):
+    def __init__(self, store: Store, sched: TaskManager = None, cache: Optional[Cache] = None, modules: List[str] = None):
         """Create a Pipeline, inject params
 
         :param store: The `Store` provides access to the job DB
         :param sched: The `TaskManager` handles Task management
         :param cache: The key value store used to track input and output hashes for tasks.
         """
-        self.sched = sched if sched else KubernetesTaskManager(store)
+        self.sched = sched if sched else KubernetesTaskManager(store, modules=modules)
         self.store = store
         self.cache = cache if cache else MemoryCache()
 

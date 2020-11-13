@@ -32,6 +32,9 @@ KF_MODULES = [
     'odin.handlers.tfjob',
     'odin.handlers.pytorchjob',
 ]
+ELASTIC_MODULES = [
+    'odin.handlers.elasticjob',
+]
 DEFAULT_MODULES = CORE_MODULES + KF_MODULES
 REGISTRY = 'registry'
 
