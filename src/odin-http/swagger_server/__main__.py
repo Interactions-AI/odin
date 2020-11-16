@@ -25,7 +25,10 @@ def get_db_config(cred: Optional[str]) -> Dict:
     """
     if cred:
         cred_params = read_config_stream(cred)['odin_db']
-
+        if 'host' not in cred_params:
+            cred_params['host'] = cred_params['dbhost']
+        if 'port' not in cred_params:
+            cred_params['port'] = cred_params['dbport']
     else:
         cred_params = {}
         cred_params['backend'] = os.environ.get("ODIN_JOBS_BACKEND", "postgres")
