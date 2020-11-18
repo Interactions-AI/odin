@@ -73,6 +73,8 @@ class TFJobHandler(ResourceHandler):
         """
         secrets = self._reference_secrets(task)
         configmaps = self._generate_configmaps(task)
+        task.num_gpus = 1
+
         pod_spec = task_to_pod_spec(task, container_name="tensorflow", secrets=secrets, configmaps=configmaps)
         template_metadata = client.V1ObjectMeta(name=task.name)
 
