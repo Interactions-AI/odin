@@ -23,6 +23,12 @@ The HTTP API for Odin provides a Restful interface to user and resource manageme
 
 The midgard [DaemonSet](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/), provides node level information concerning devices like GPUs as well as system resources to the HTTP API which aggregates this information and makes it available as a central service that can be queried within the cluster.  This information makes it easy to get cluster-level granular information including information that would normally be retrieved on single systems using `nvidia-smi`
 
+### Integrating with a metrics service
+
+Odin has been used as a framework for both large-scale training jobs within Interactions and autoML where a set of hyper-parameters are explored and logged via a metrics server.  While in theory, any metrics server that can log and retrieve results from experiments for a given run would work, [xpctl](https://github.com/mead-ml/xpctl) is a service that is known to work well within the Odin ecosystem.  It is an extensible, task-level metric service that (like Odin) is Mongo or Postgres-backed, provides a simple HTTP API for logging and retrieving experiments, and is containerized with images on Dockerhub.
+
+We will add more documentation on using a metrics service for continuous deployment and autoML in the near future.
+
 ## Setup
 
 There are [sample setup configs](https://github.com/Interactions-AI/sample-odin-configs) and a detailed tutorial for
