@@ -46,7 +46,7 @@ def request_cleanup_http(url: str, jwt_token: str, work: str, purge_db: bool = F
     :param purge_db: Should we delete the pipeline from the jobs db too?
     :param purge_fs: Should we remove pipeline file system artifacts?
     """
-    results = HttpClient(url).delete_pipeline(jwt_token, work, purge_db, purge_fs)
+    results = HttpClient(url, jwt_token=jwt_token).delete_pipeline(work, purge_db, purge_fs)
     cleaned = [_result2cleanup(r) for r in results['cleanups']]
     print("Results of this request:")
     print_table(cleaned)

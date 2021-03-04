@@ -2,7 +2,7 @@
 import os
 import requests
 from typing import Dict
-
+from odin.utils.auth import _authenticate
 ODIN_URL = os.environ.get('ODIN_URL', 'localhost')
 ODIN_PORT = os.environ.get('ODIN_PORT', 9003)
 
@@ -22,7 +22,7 @@ def encode_path(path: str) -> str:
 
 
 class HttpClient:
-    def __init__(self, url=None, host=None, port=None, scheme=None):
+    def __init__(self, url=None, host=None, port=None, scheme=None, username=None, password=None, jwt_token=None):
         if url is None:
             if host is None:
                 host = ODIN_URL
@@ -34,16 +34,22 @@ class HttpClient:
         else:
             self.url = url
 
-    def schedule_pipeline(self, jwt_token: str, work: str) -> Dict:
+        username = username
+        password = password
+        if username is not None and password is not None:
+            self.jwt_token = _authenticate(self.url, username, password)
+        else:
+            self.jwt_token = jwt_token
+
+    def schedule_pipeline(self, work: str) -> Dict:
         """Request the status over HTTP
         :param url: the base URL
-        :param jwt_token: The JWT token representing this authentication
         :param work: The pipeline ID
         """
         job = encode_path(work)
         response = requests.post(
             f'{self.url}/v1/pipelines',
-            headers={'Authorization': f'Bearer {jwt_token}'},
+            headers={'Authorization': f'Bearer {self.jwt_token}'},
             json={"pipeline": {"job": job}},
         )
         if response.status_code == 401:
@@ -51,17 +57,16 @@ class HttpClient:
         results = response.json()
         return results
 
-    def create_job(self, jwt_token: str, name: str) -> Dict:
+    def create_job(self, name: str) -> Dict:
 
         """Request the server makes a new job.
 
         :param url: Base url of the remote odin server
-        :param jwt_token: You JWT authentication token
         :param name: The name of the job you want to create
         """
         job = encode_path(name)
         response = requests.post(
-            f"{self.url}/v1/jobs", headers={"Authorization": f"Bearer {jwt_token}"}, json={"job": {"name": job}}
+            f"{self.url}/v1/jobs", headers={"Authorization": f"Bearer {self.jwt_token}"}, json={"job": {"name": job}}
         )
         if response.status_code == 401:
             raise ValueError("Invalid Login")
@@ -97,10 +102,9 @@ class HttpClient:
         nodes = response.json()['nodes']
         return nodes
 
-    def push_file(self, jwt_token: str, job: str, file_name: str, file_contents: str) -> Dict:
+    def push_file(self, job: str, file_name: str, file_contents: str) -> Dict:
         """Push a file to update a pipeline.
 
-        :param jwt_token: The jwt token used to auth with odin
         :param job: The job definition that will be updated
         :param file_name: The name to save the file as on the remove server
         :param file_contents: The content of the file we want to upload
@@ -109,17 +113,16 @@ class HttpClient:
         response = requests.post(
             f'{self.url}/v1/jobs/{job}/files/{file_name}',
             data=file_contents,
-            headers={'Content-Type': 'text/plain', 'Authorization': f'Bearer {jwt_token}'},
+            headers={'Content-Type': 'text/plain', 'Authorization': f'Bearer {self.jwt_token}'},
         )
         if response.status_code == 401:
             raise ValueError("Invalid login")
         results = response.json()
         return results
 
-    def delete_pipeline(self, jwt_token: str, work: str, purge_db: bool = False, purge_fs: bool = False) -> Dict:
+    def delete_pipeline(self, work: str, purge_db: bool = False, purge_fs: bool = False) -> Dict:
         """Request delete pipeline
         :param url: the base URL
-        :param jwt_token: The token for last user auth
         :param work: The pipeline ID
         :param purge_db: Should we delete the pipeline from the jobs db too?
         :param purge_fs: Should we remove pipeline file system artifacts?
@@ -127,7 +130,7 @@ class HttpClient:
 
         response = requests.delete(
             f'{self.url}/v1/pipelines/{work}',
-            headers={'Authorization': f'Bearer {jwt_token}'},
+            headers={'Authorization': f'Bearer {self.jwt_token}'},
             params={'db': purge_db, 'fs': purge_fs},
         )
         if response.status_code == 401:

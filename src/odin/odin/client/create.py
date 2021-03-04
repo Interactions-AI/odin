@@ -15,7 +15,7 @@ def create_job_http(url: str, jwt_token: str, name: str) -> None:
     :param jwt_token: You JWT authentication token
     :param name: The name of the job you want to create
     """
-    results = HttpClient(url).create_job(jwt_token, name)
+    results = HttpClient(url, jwt_token).create_job(name)
     print(json.dumps(results))
 
 

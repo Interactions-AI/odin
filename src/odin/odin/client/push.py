@@ -6,9 +6,10 @@ import argparse
 from getpass import getuser
 from odin.client import ODIN_URL, ODIN_PORT, HttpClient
 from odin.utils.auth import get_jwt_token
+from baseline.utils import color, Colors
 
 
-def push_file(url: str, jwt_token: str, job: str, file_name: str, file_contents: str) -> None:
+def push_file_maybe_create_job(url: str, jwt_token: str, job: str, file_name: str, file_contents: str, create_job: bool) -> None:
     """Push a file to update a remove pipeline.
 
     :param url: The odin-http endpoint
@@ -17,19 +18,28 @@ def push_file(url: str, jwt_token: str, job: str, file_name: str, file_contents:
     :param file_name: The name to save the file as on the remove server
     :param file_contents: The content of the file we want to upload
     """
-    results = HttpClient(url).push_file(jwt_token, job, file_name, file_contents)
+    client = HttpClient(url, jwt_token=jwt_token)
+    if create_job:
+        results = client.create_job(job)
+        if 'status' in results:
+            status = color('Failed tor create a new job. If the job already exists, do not try to create', Colors.RED)
+            print(json.dumps(results))
+            print(status)
+            return
+    results = client.push_file(job, file_name, file_contents)
     print(json.dumps(results))
 
 
 def main():
     """This should have auth around it."""
     parser = argparse.ArgumentParser(description="Upload a file to odin")
-    parser.add_argument('work', help='The Job to push the file to')
+    parser.add_argument('job', help='The Job to push the file to')
     parser.add_argument('file', help='The data to upload')
     parser.add_argument('--file_name', help='The name for the file on remote, defaults to the local file name')
-    parser.add_argument('--host', default=ODIN_URL, type=str, help="The odin http rul")
+    parser.add_argument('--host', default=ODIN_URL, type=str, help="The odin http host")
     parser.add_argument('--port', default=ODIN_PORT, help="The odin http port")
     parser.add_argument('--token', help="File where JWT token can reside", default=os.path.expanduser("~/.odin.token"))
+    parser.add_argument('--create', '-c', action='store_true', help="If this is given, we will attempt to create a job with this name")
     parser.add_argument('--username', '-u', help="Username", default=getuser())
     parser.add_argument('--password', '-p', help="Password")
     parser.add_argument(
@@ -47,13 +57,13 @@ def main():
 
     jwt_token = get_jwt_token(url, args.token, args.username, args.password)
     try:
-        push_file(url, jwt_token, args.work, file_name, file_contents)
+        push_file_maybe_create_job(url, jwt_token, args.job, file_name, file_contents, args.create)
     except ValueError:
         # Try deleting the token file and start again
         if os.path.exists(args.token):
             os.remove(args.token)
             jwt_token = get_jwt_token(url, args.token, args.username, args.password)
-            push_file(url, jwt_token, args.work, file_name, file_contents)
+            push_file_maybe_create_job(url, jwt_token, args.job, file_name, file_contents, args.create)
 
 
 if __name__ == "__main__":

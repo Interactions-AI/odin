@@ -40,7 +40,7 @@ def schedule_pipeline_http(url: str, jwt_token: str, work: str) -> None:
     :param jwt_token: The JWT token representing this authentication
     :param work: The pipeline ID
     """
-    results = HttpClient(url).schedule_pipeline(jwt_token, work)
+    results = HttpClient(url, jwt_token=jwt_token).schedule_pipeline(work)
     print(json.dumps(results))
 
 
