@@ -4,8 +4,7 @@ import os
 import json
 import argparse
 from getpass import getuser
-import requests
-from odin.client import ODIN_URL, ODIN_PORT, encode_path
+from odin.client import ODIN_URL, ODIN_PORT, HttpClient
 from odin.utils.auth import get_jwt_token
 
 
@@ -18,16 +17,8 @@ def push_file(url: str, jwt_token: str, job: str, file_name: str, file_contents:
     :param file_name: The name to save the file as on the remove server
     :param file_contents: The content of the file we want to upload
     """
-    job = encode_path(job)
-    response = requests.post(
-        f'{url}/v1/jobs/{job}/files/{file_name}',
-        data=file_contents,
-        headers={'Content-Type': 'text/plain', 'Authorization': f'Bearer {jwt_token}'},
-    )
-    if response.status_code == 401:
-        raise ValueError("Invalid login")
-    result = response.json()
-    print(json.dumps(result))
+    results = HttpClient(url).push_file(jwt_token, job, file_name, file_contents)
+    print(json.dumps(results))
 
 
 def main():

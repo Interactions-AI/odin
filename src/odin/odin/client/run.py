@@ -8,7 +8,7 @@ import signal
 import requests
 import websockets
 from odin import LOGGER, APIField, APIStatus
-from odin.client import ODIN_URL, ODIN_PORT, encode_path
+from odin.client import ODIN_URL, ODIN_PORT, HttpClient
 from odin.utils.auth import get_jwt_token
 
 
@@ -40,13 +40,7 @@ def schedule_pipeline_http(url: str, jwt_token: str, work: str) -> None:
     :param jwt_token: The JWT token representing this authentication
     :param work: The pipeline ID
     """
-    job = encode_path(work)
-    response = requests.post(
-        f'{url}/v1/pipelines', headers={'Authorization': f'Bearer {jwt_token}'}, json={"pipeline": {"job": job}}
-    )
-    if response.status_code == 401:
-        raise ValueError("Invalid login")
-    results = response.json()
+    results = HttpClient(url).schedule_pipeline(jwt_token, work)
     print(json.dumps(results))
 
 

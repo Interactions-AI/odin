@@ -4,8 +4,7 @@ import os
 import json
 import argparse
 from getpass import getuser
-import requests
-from odin.client import ODIN_URL, ODIN_PORT, encode_path
+from odin.client import ODIN_URL, ODIN_PORT, HttpClient
 from odin.utils.auth import get_jwt_token
 
 
@@ -16,13 +15,7 @@ def create_job_http(url: str, jwt_token: str, name: str) -> None:
     :param jwt_token: You JWT authentication token
     :param name: The name of the job you want to create
     """
-    job = encode_path(name)
-    response = requests.post(
-        f"{url}/v1/jobs", headers={"Authorization": f"Bearer {jwt_token}"}, json={"job": {"name": job}}
-    )
-    if response.status_code == 401:
-        raise ValueError("Invalid Login")
-    results = response.json()
+    results = HttpClient(url).create_job(jwt_token, name)
     print(json.dumps(results))
 
 

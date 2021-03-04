@@ -5,10 +5,9 @@ from getpass import getuser
 import json
 import asyncio
 import argparse
-import requests
 import websockets
 from odin import LOGGER, APIField, APIStatus
-from odin.client import ODIN_URL, ODIN_PORT
+from odin.client import ODIN_URL, ODIN_PORT, HttpClient
 from odin.cleanup import Cleaned
 from odin.utils.formatting import print_table
 from odin.utils.auth import get_jwt_token
@@ -47,15 +46,7 @@ def request_cleanup_http(url: str, jwt_token: str, work: str, purge_db: bool = F
     :param purge_db: Should we delete the pipeline from the jobs db too?
     :param purge_fs: Should we remove pipeline file system artifacts?
     """
-
-    response = requests.delete(
-        f'{url}/v1/pipelines/{work}',
-        headers={'Authorization': f'Bearer {jwt_token}'},
-        params={'db': purge_db, 'fs': purge_fs},
-    )
-    if response.status_code == 401:
-        raise ValueError("Invalid login")
-    results = response.json()
+    results = HttpClient(url).delete_pipeline(jwt_token, work, purge_db, purge_fs)
     cleaned = [_result2cleanup(r) for r in results['cleanups']]
     print("Results of this request:")
     print_table(cleaned)

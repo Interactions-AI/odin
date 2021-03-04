@@ -1,8 +1,7 @@
-"""Websocket client to get the status a job."""
+"""Websocket/HTTP client to get the status a job."""
 from collections import namedtuple
 import argparse
-import requests
-from odin.client import ODIN_URL, ODIN_PORT
+from odin.client import ODIN_URL, ODIN_PORT, HttpClient
 from odin.utils.formatting import print_table
 
 Row = namedtuple('Row', 'host gpu type free processes pids')
@@ -23,8 +22,7 @@ def request_nodes_http(url: str) -> None:
     """Request the status over HTTP
     :param url: the base URL
     """
-    response = requests.get(f'{url}/v1/nodes')
-    nodes = response.json()['nodes']
+    nodes = HttpClient(url).request_cluster_hw_status()
     rows = []
 
     for node in nodes:

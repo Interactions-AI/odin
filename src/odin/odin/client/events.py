@@ -3,11 +3,10 @@
 import json
 import asyncio
 import argparse
-import requests
 import websockets
 from odin import LOGGER, APIField, APIStatus
 from odin.k8s import Event
-from odin.client import ODIN_URL, ODIN_PORT
+from odin.client import ODIN_URL, ODIN_PORT, HttpClient
 from odin.utils.formatting import print_table
 
 
@@ -48,10 +47,7 @@ def request_events_http(url: str, resource: str) -> None:
     :param url: The base URL
     :param resource: The resource ID
     """
-    response = requests.get(f'{url}/v1/resources/{resource}/events')
-    if response.status_code == 401:
-        raise ValueError("Invalid login")
-    results = response.json()
+    results = HttpClient(url).request_events(resource)
     events = [_result2event(result) for result in results['events']]
     print_table(events)
 
