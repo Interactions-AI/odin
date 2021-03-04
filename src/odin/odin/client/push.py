@@ -9,7 +9,9 @@ from odin.utils.auth import get_jwt_token
 from baseline.utils import color, Colors
 
 
-def push_file_maybe_create_job(url: str, jwt_token: str, job: str, file_name: str, file_contents: str, create_job: bool) -> None:
+def push_file_maybe_create_job(
+    url: str, jwt_token: str, job: str, file_name: str, file_contents: str, create_job: bool
+) -> None:
     """Push a file to update a remove pipeline.
 
     :param url: The odin-http endpoint
@@ -39,7 +41,9 @@ def main():
     parser.add_argument('--host', default=ODIN_URL, type=str, help="The odin http host")
     parser.add_argument('--port', default=ODIN_PORT, help="The odin http port")
     parser.add_argument('--token', help="File where JWT token can reside", default=os.path.expanduser("~/.odin.token"))
-    parser.add_argument('--create', '-c', action='store_true', help="If this is given, we will attempt to create a job with this name")
+    parser.add_argument(
+        '--create', '-c', action='store_true', help="If this is given, we will attempt to create a job with this name"
+    )
     parser.add_argument('--username', '-u', help="Username", default=getuser())
     parser.add_argument('--password', '-p', help="Password")
     parser.add_argument(

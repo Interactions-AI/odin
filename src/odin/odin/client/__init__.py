@@ -3,6 +3,7 @@ import os
 import requests
 from typing import Dict
 from odin.utils.auth import _authenticate
+
 ODIN_URL = os.environ.get('ODIN_URL', 'localhost')
 ODIN_PORT = os.environ.get('ODIN_PORT', 9003)
 
