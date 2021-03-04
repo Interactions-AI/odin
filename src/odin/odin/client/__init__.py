@@ -144,3 +144,20 @@ class HttpClient:
         response = requests.get(f'{self.url}/v1/pipelines?q={work}')
         results = response.json()['pipelines']
         return results
+
+    def request_logs(self, pod: str, namespace='default', **kwargs) -> str:
+        """This function really shouldnt be provided here -- forget you saw this
+
+        Using the logs directly from k8s isnt desirable, we should add this to the HTTP tier, but if you really
+        need it, this function should get results back
+        :param work:
+        :return:
+        """
+        from kubernetes import client, config
+        try:
+            config.load_incluster_config()
+        except config.config_exception.ConfigException:
+            config.load_kube_config()
+        api = client.CoreV1Api()
+        logs = api.read_namespaced_pod_log(pod, namespace=namespace, **kwargs)
+        return logs
