@@ -9,6 +9,7 @@ from sqlalchemy.orm import sessionmaker
 from datetime import datetime
 from copy import deepcopy
 
+
 class DB:
 
     SessionFactory = None
@@ -73,7 +74,7 @@ class PostgresCache(Cache):
         passwd: Optional[str] = None,
         db: str = 'jobs_db',
         port: int = 5432,
-        **kwargs
+        **kwargs,
     ):
         """Connect to the mongodb backend.
 
@@ -138,6 +139,7 @@ class PostgresStore(Store):
 
     This implementation fulfills the `Store` interface backed by a MongoDB
     """
+
     def __init__(
         self,
         host: str,
@@ -145,7 +147,7 @@ class PostgresStore(Store):
         passwd: Optional[str] = None,
         db: str = 'jobs_db',
         port: int = 5432,
-        **kwargs
+        **kwargs,
     ):
         """Connect to the mongodb backend.
 
@@ -234,8 +236,18 @@ class PostgresStore(Store):
             if completion_time is not None:
                 kv.completion_time = completion_time
         else:
-            session.add(Job(label=id, details=d, version=version, status=status, submit_time=submit_time,
-                            completion_time=completion_time, parent_label=parent_label, job_name=job_name))
+            session.add(
+                Job(
+                    label=id,
+                    details=d,
+                    version=version,
+                    status=status,
+                    submit_time=submit_time,
+                    completion_time=completion_time,
+                    parent_label=parent_label,
+                    job_name=job_name,
+                )
+            )
         session.commit()
 
     def exists(self, job_id: str) -> bool:
@@ -271,7 +283,10 @@ class PostgresStore(Store):
         { <field>: { $regex: /pattern/<options> } }
         """
         session = self.Session()
-        matches = [h.label for h in session.query(Job).filter(Job.parent_label == None).filter(Job.label.ilike(f'{pattern}%')).all()]
+        matches = [
+            h.label
+            for h in session.query(Job).filter(Job.parent_label == None).filter(Job.label.ilike(f'{pattern}%')).all()
+        ]
         return matches
 
     def children_like(self, pattern: str) -> List[str]:
@@ -281,7 +296,10 @@ class PostgresStore(Store):
         :return: Any jobs that match this
         """
         session = self.Session()
-        matches = [h.label for h in session.query(Job).filter(Job.parent_label!=None).filter(Job.label.ilike(f'{pattern}%')).all()]
+        matches = [
+            h.label
+            for h in session.query(Job).filter(Job.parent_label != None).filter(Job.label.ilike(f'{pattern}%')).all()
+        ]
         return matches
 
     def is_a_child(self, child: str) -> bool:
@@ -291,5 +309,3 @@ class PostgresStore(Store):
         :return: `True` if its a child
         """
         return self._get_if(child).first().parent_label is not None
-
-

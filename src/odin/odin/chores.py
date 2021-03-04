@@ -28,7 +28,7 @@ def set_repo_creds(
     name: Optional[str] = None,
     email: Optional[str] = None,
     name_env: str = "ODIN_GIT_NAME",
-    email_env: str = "ODIN_GIT_EMAIL"
+    email_env: str = "ODIN_GIT_EMAIL",
 ) -> git.Repo:
     """Set the name and email on the git repo so you can commit.
 

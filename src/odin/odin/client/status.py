@@ -4,11 +4,10 @@ import json
 import asyncio
 import argparse
 from typing import Set
-import requests
 import websockets
 from odin import LOGGER, APIField, APIStatus
 from odin.status import show_status, Row, Pipeline
-from odin.client import ODIN_URL, ODIN_PORT
+from odin.client import ODIN_URL, ODIN_PORT, HttpClient
 
 
 async def request_status(ws: str, work: str, columns: Set[str], all_cols: bool = False) -> None:
@@ -68,8 +67,7 @@ def request_status_http(url: str, work: str, columns: Set[str], all_cols: bool =
     :param columns: A set of columns to include in the output
     :param all_cols: Should we just show all columns, If true then columns in ignored
     """
-    response = requests.get(f'{url}/v1/pipelines?q={work}')
-    results = response.json()['pipelines']
+    results = HttpClient(url).request_status(work)
     for result in results:
         rows = [_task2row(r) for r in result['tasks']]
         show_status(_result2pipe(result), rows, columns, all_cols)

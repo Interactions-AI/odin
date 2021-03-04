@@ -3,10 +3,9 @@
 import json
 import asyncio
 import argparse
-import requests
 import websockets
 from odin import LOGGER, APIField, APIStatus
-from odin.client import ODIN_URL, ODIN_PORT
+from odin.client import ODIN_URL, ODIN_PORT, HttpClient
 
 
 async def request_data(url: str, resource: str) -> None:
@@ -32,8 +31,7 @@ def request_data_http(url: str, resource: str) -> None:
     :param url: The base URL
     :param resource: The resource ID
     """
-    response = requests.get(f'{url}/v1/resources/{resource}/data')
-    results = response.json()
+    results = HttpClient(url).request_data(resource)
     print(json.dumps(results))
 
 
