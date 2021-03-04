@@ -21,12 +21,7 @@ from odin.store import Store
 ConfigMap = namedtuple('ConfigMap', 'path name sub_path')
 
 HASH_TRAILING = '-hash'
-CORE_MODULES = [
-    'odin.handlers.job',
-    'odin.handlers.deployment',
-    'odin.handlers.service',
-    'odin.handlers.pod'
-]
+CORE_MODULES = ['odin.handlers.job', 'odin.handlers.deployment', 'odin.handlers.service', 'odin.handlers.pod']
 KF_MODULES = [
     'odin.handlers.mpijob',
     'odin.handlers.tfjob',

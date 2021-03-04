@@ -19,7 +19,7 @@ class MongoCache(Cache):
         passwd: Optional[str] = None,
         db: str = 'jobs_db',
         port: int = pymongo.MongoClient.PORT,
-        **kwargs
+        **kwargs,
     ):
         """Connect to the mongodb backend.
 
@@ -194,4 +194,3 @@ class MongoStore(Store):
         """
         children = self.children_like(child)
         return bool(children)
-

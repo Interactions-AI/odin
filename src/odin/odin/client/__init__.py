@@ -22,7 +22,6 @@ def encode_path(path: str) -> str:
 
 
 class HttpClient:
-
     def __init__(self, url=None, host=None, port=None, scheme=None):
         if url is None:
             if host is None:
@@ -43,7 +42,9 @@ class HttpClient:
         """
         job = encode_path(work)
         response = requests.post(
-            f'{self.url}/v1/pipelines', headers={'Authorization': f'Bearer {jwt_token}'}, json={"pipeline": {"job": job}}
+            f'{self.url}/v1/pipelines',
+            headers={'Authorization': f'Bearer {jwt_token}'},
+            json={"pipeline": {"job": job}},
         )
         if response.status_code == 401:
             raise ValueError("Invalid login")
@@ -154,6 +155,7 @@ class HttpClient:
         :return:
         """
         from kubernetes import client, config
+
         try:
             config.load_incluster_config()
         except config.config_exception.ConfigException:

@@ -37,10 +37,7 @@ def main():
     parser.add_argument('--host', default=ODIN_URL, type=str)
     parser.add_argument('--port', default=ODIN_PORT)
     parser.add_argument(
-        '--scheme',
-        choices={'http', 'https'},
-        default='https',
-        help='Connection protocol, supports HTTP and HTTPs',
+        '--scheme', choices={'http', 'https'}, default='https', help='Connection protocol, supports HTTP and HTTPs',
     )
     args = parser.parse_args()
 

@@ -84,9 +84,13 @@ class PyTorchElasticJobHandler(ResourceHandler):
         spec['maxReplicas'] = task.num_workers
         etcd_svc = getenv('PYTORCH_ELASTIC_ETCD_SVC')
         if not etcd_svc:
-            LOGGER.warning("No environment variable set for etcd service, looking for first available in elastic-job namespace")
+            LOGGER.warning(
+                "No environment variable set for etcd service, looking for first available in elastic-job namespace"
+            )
             api = client.CoreV1Api()
-            etcd_svc = [x for x in api.list_namespaced_service('elastic-job').items if x.metadata.name =='etcd-service'][0].spec.cluster_ip
+            etcd_svc = [
+                x for x in api.list_namespaced_service('elastic-job').items if x.metadata.name == 'etcd-service'
+            ][0].spec.cluster_ip
         LOGGER.info("Using etcd service on %s:%d", etcd_svc, PyTorchElasticJobHandler.ETCD_PORT)
         spec['rdzvEndpoint'] = f'{etcd_svc}:{PyTorchElasticJobHandler.ETCD_PORT}'
         pytorch_job_spec = {}
@@ -113,11 +117,13 @@ class PyTorchElasticJobHandler(ResourceHandler):
         :rtype: List[client.models.v1_pod.V1Pod]
         """
         try:
-            selector = json_to_selector(
-                {PyTorchElasticJobHandler.GROUP_KEY: PyTorchElasticJobHandler.GROUP}
-            )
+            selector = json_to_selector({PyTorchElasticJobHandler.GROUP_KEY: PyTorchElasticJobHandler.GROUP})
 
-            pods = [x for x in self.core_api.list_namespaced_pod(self.namespace, label_selector=selector).items if x.metadata.name.startswith(name)]
+            pods = [
+                x
+                for x in self.core_api.list_namespaced_pod(self.namespace, label_selector=selector).items
+                if x.metadata.name.startswith(name)
+            ]
             return pods
         except client.rest.ApiException:
             return []
@@ -152,7 +158,9 @@ class PyTorchElasticJobHandler(ResourceHandler):
         :type store: Store
         :return: None
         """
-        delete_options = client.V1DeleteOptions(api_version=PyTorchElasticJobHandler.VERSION, propagation_policy="Background")
+        delete_options = client.V1DeleteOptions(
+            api_version=PyTorchElasticJobHandler.VERSION, propagation_policy="Background"
+        )
         resource_id = store.get(name)[Store.RESOURCE_ID]
         return self.api.delete_namespaced_custom_object(
             PyTorchElasticJobHandler.GROUP,
