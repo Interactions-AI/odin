@@ -7,7 +7,7 @@ import signal
 from typing import Optional
 import websockets
 from odin import LOGGER, APIField, APIStatus
-from odin.client import ODIN_URL, ODIN_PORT
+from odin.client import ODIN_URL, ODIN_PORT, HttpClient
 
 
 async def request_logs(
@@ -22,6 +22,8 @@ async def request_logs(
         when there are multiple containers in a pod
     :param follow: Should you get all the logs available right now or stream
         them as they come in?
+    :param lines: How many lines to grab
+
     """
     work = {'resource': resource, 'namespace': namespace, 'follow': follow}
     if container is not None:
@@ -38,6 +40,30 @@ async def request_logs(
             LOGGER.info(line[APIField.RESPONSE])
             line = json.loads(await websocket.recv())
 
+
+def log_all_children_http(url, resource, namespace):
+    client = HttpClient(url=url)
+    try:
+        print(client.request_logs(resource, namespace))
+    except:
+        # Lets try and find this resource
+        head = resource.split('--')[0]
+        data = client.request_data(head)
+        for job in data['jobs']['jobs']:
+            rid = client.request_data(job)['jobs']['resource_id']
+            print('================')
+            print(rid)
+            print('----------------')
+            try:
+                logs = client.request_logs(rid, namespace)
+                print(logs)
+            except:
+                try:
+                    # If everything still fails, it could be a Kubeflow job child
+                    logs = client.request_logs(f'{rid}-master-0', namespace)
+                    print(logs)
+                except:
+                    print('Failed to get log')
 
 def main():
     """Async websocket client to get logs from k8s pods."""
@@ -58,16 +84,22 @@ def main():
     parser.add_argument('--port', default=ODIN_PORT, help="The port the server listens on.")
     parser.add_argument(
         '--scheme',
-        choices={'wss', 'ws'},
-        default='wss',
+        choices={'http', 'https', 'wss', 'ws'},
+        default='https',
         help='Websocket connection protocol, use `wss` for remote connections and `ws` for localhost',
     )
     args = parser.parse_args()
 
-    ws = f'{args.scheme}://{args.host}:{args.port}'
-    asyncio.get_event_loop().run_until_complete(
-        request_logs(ws, args.resource, args.namespace, args.container, args.follow, args.lines)
-    )
+    endpoint = f'{args.scheme}://{args.host}:{args.port}'
+
+    if args.scheme.startswith('http'):
+        log_all_children_http(endpoint, args.resource, args.namespace)
+
+    else:
+
+        asyncio.get_event_loop().run_until_complete(
+            request_logs(endpoint, args.resource, args.namespace, args.container, args.follow, args.lines)
+        )
 
 
 if __name__ == "__main__":
