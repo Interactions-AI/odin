@@ -46,8 +46,7 @@ def log_all_children_http(url, resource, namespace):
     try:
         print(client.request_logs(resource, namespace))
     except:
-        # Lets try and find this resource
-        head = resource.split('--')[0]
+        head = find_head(resource)
         data = client.request_data(head)
         for job in data['jobs']['jobs']:
             rid = client.request_data(job)['jobs']['resource_id']
@@ -64,6 +63,15 @@ def log_all_children_http(url, resource, namespace):
                     print(logs)
                 except:
                     print('Failed to get log')
+
+
+def find_head(resource):
+    # Lets try and find this resource
+    head = resource.split('j--')[0]
+    if not head.endswith('j'):
+        head += 'j'
+    return head
+
 
 def main():
     """Async websocket client to get logs from k8s pods."""
