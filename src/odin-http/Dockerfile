@@ -1,18 +1,7 @@
-FROM python:3.6.4-jessie
+FROM python:3.7
 
-RUN mkdir -p /usr/src/app
-WORKDIR /usr/src/app
-
-COPY requirements.txt /usr/src/app/
-
+COPY . /
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . /usr/src/app
-
-# Install baseline
-RUN python3.6 -m pip install mead-baseline
-
-
 EXPOSE 9003
-
-ENTRYPOINT ["python", "-m", "swagger_server"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "9003"]

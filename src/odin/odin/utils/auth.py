@@ -15,16 +15,21 @@ def _authenticate(url, username, passwd):
     response = None
     url = f'{url}/v1/auth'
     try:
-
-        response = requests.post(url, json={'username': username, 'password': passwd})
+        response = requests.post(url, data={'username': username, 'password': passwd})
         results = response.json()
         return results['message']
     except Exception as ex:
-        LOGGER.error(url)
-        if response:
-            LOGGER.error(response.status_code)
+        try:
 
-        raise ex
+            response = requests.post(url, json={'username': username, 'password': passwd})
+            results = response.json()
+            return results['message']
+        except Exception as ex:
+            LOGGER.error(url)
+            if response:
+                LOGGER.error(response.status_code)
+
+            raise ex
 
 
 @str_file(token_file='w')

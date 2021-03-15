@@ -6,6 +6,7 @@ from odin.utils.auth import _authenticate
 
 ODIN_URL = os.environ.get('ODIN_URL', 'localhost')
 ODIN_PORT = os.environ.get('ODIN_PORT', 9003)
+ODIN_SCHEME = os.environ.get('ODIN_SCHEME', 'https')
 
 
 def encode_path(path: str) -> str:
@@ -30,7 +31,7 @@ class HttpClient:
             if port is None:
                 port = ODIN_PORT
             if scheme is None:
-                scheme = 'https'
+                scheme = ODIN_SCHEME
             self.url = f'{scheme}://{host}:{port}'
         else:
             self.url = url
@@ -71,6 +72,12 @@ class HttpClient:
         )
         if response.status_code == 401:
             raise ValueError("Invalid Login")
+        results = response.json()
+        return results
+
+    def request_job(self, name: str) -> Dict:
+        name = name.replace('/', '__')
+        response = requests.get(f'{self.url}/v1/jobs/{name}')
         results = response.json()
         return results
 
