@@ -16,6 +16,8 @@ def _authenticate(url, username, passwd):
     url = f'{url}/v1/auth'
     try:
         response = requests.post(url, data={'username': username, 'password': passwd})
+        results = response.json()
+        return results['message']
     except Exception as ex:
         try:
 
