@@ -3,7 +3,7 @@ import argparse
 from getpass import getuser
 import os
 from odin import LOGGER
-from odin.client import ODIN_URL, ODIN_PORT
+from odin.client import ODIN_URL, ODIN_PORT, ODIN_SCHEME
 from odin.utils.auth import get_jwt_token
 
 
@@ -29,7 +29,7 @@ def main():
     parser.add_argument('--token', help="File where JWT token can reside", default=os.path.expanduser("~/.odin.token"))
     parser.add_argument('--username', '-u', help="Create or update a username", default=getuser())
     parser.add_argument('--password', '-p', help="New or updated password")
-    parser.add_argument('--scheme', choices={'http', 'https'}, default='https', help='The protocol to communicate over')
+    parser.add_argument('--scheme', choices={'http', 'https'}, default=ODIN_SCHEME, help='The protocol to communicate over')
     args = parser.parse_args()
     url = f'{args.scheme}://{args.host}:{args.port}'
     authenticate_user(url, args.token, args.username, args.password)

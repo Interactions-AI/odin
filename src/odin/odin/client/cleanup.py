@@ -7,7 +7,7 @@ import asyncio
 import argparse
 import websockets
 from odin import LOGGER, APIField, APIStatus
-from odin.client import ODIN_URL, ODIN_PORT, HttpClient
+from odin.client import ODIN_URL, ODIN_PORT, ODIN_SCHEME, HttpClient
 from odin.cleanup import Cleaned
 from odin.utils.formatting import print_table
 from odin.utils.auth import get_jwt_token
@@ -64,7 +64,7 @@ def main():
     parser.add_argument(
         '--scheme',
         choices={'wss', 'ws', 'http', 'https'},
-        default='https',
+        default=ODIN_SCHEME,
         help='Connection protocol, use `http` for REST, use `wss` for remote connections and `ws` for localhost',
     )
     parser.add_argument('--db', '-d', action='store_true', help="Also remove from the job db")

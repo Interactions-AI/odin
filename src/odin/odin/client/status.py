@@ -7,7 +7,7 @@ from typing import Set
 import websockets
 from odin import LOGGER, APIField, APIStatus
 from odin.status import show_status, Row, Pipeline
-from odin.client import ODIN_URL, ODIN_PORT, HttpClient
+from odin.client import ODIN_URL, ODIN_PORT, ODIN_SCHEME, HttpClient
 
 
 async def request_status(ws: str, work: str, columns: Set[str], all_cols: bool = False) -> None:
@@ -82,7 +82,7 @@ def main():
     parser.add_argument(
         '--scheme',
         choices={'wss', 'ws', 'http', 'https'},
-        default='https',
+        default=ODIN_SCHEME,
         help='Connection protocol, use `http` for REST, use `wss` for remote connections and `ws` for localhost',
     )
     parser.add_argument('--columns', nargs="+", default=[], help="Columns of the status to show.")
