@@ -1,5 +1,6 @@
 from typing import Optional, List, Dict
 import glob
+import asyncio
 import requests
 import time
 import yaml
@@ -434,20 +435,19 @@ def download_job_file(job_id: str, filename: str) -> str:
 
 
 @app.post("/jobs/{job_id}/files/{filename}")
-def upload_job_file(job_id: str, filename: str, body: Request=Body(..., media_type="application/binary"), token: str=Depends(oauth2_scheme)):
+async def upload_job_file(job_id: str, filename: str, body: Request=Body(..., media_type="application/binary"), token: str=Depends(oauth2_scheme)):
     id_ = _convert_to_path(job_id)
     _validate_filename(filename)
     file_to_write = _get_job_file(id_, filename)
 
     if os.path.exists(file_to_write):
-        logging.warning("Found {}.  Overwriting".format(body))
+        logging.warning("Found {}.  Overwriting".format(filename))
+    body = await body.body()
     with open(file_to_write, 'wb') as wf:
         wf.write(body)
 
     sha = _add_to_job_repo(file_to_write, "via odin-http upload_job_file")
-    ud = UploadDefinition()
-    ud.location = f'{file_to_write}@{sha}'
-    ud.bytes = os.stat(file_to_write).st_size
+    ud = UploadDefinition(location=f'{file_to_write}@{sha}', bytes=os.stat(file_to_write).st_size)
     return ud
 
 
