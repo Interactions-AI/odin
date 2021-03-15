@@ -62,6 +62,7 @@ def get_db_config() -> Dict:
 def get_ws_url():
     return f'{WS_SCHEME}://{WS_HOST}:{WS_PORT}'
 
+
 class VersionedAPI(FastAPI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -118,13 +119,16 @@ def _repo_version_match(repos: git.Repo) -> bool:
 def _stash_pull_pop(repo: git.Repo):
     do_push_pop = False
     if repo.is_dirty():
+        LOGGER.warning("Repo is dirty.  Stashing changes")
         do_push_pop = True
         repo.git.stash()
 
     if not _repo_version_match(repo):
+        LOGGER.info("Repo is out of date.  Pulling")
         repo.git.pull('--rebase', 'origin', f'{PIPELINES_MAIN}')
 
     if do_push_pop:
+        LOGGER.warning("Popping stashed changes to repo")
         repo.git.stash('pop')
 
 
@@ -155,7 +159,14 @@ def _add_to_job_repo(filename: str, message: str = None) -> str:
 
 @app.get("/app")
 def read_main(request: Request):
-    return {"message": "Hello World", "root_path": request.scope.get("root_path")}
+    repo = git.Repo(ODIN_FS_ROOT)
+    repo = set_repo_creds(repo)
+
+    return {
+        "pipelines_root": ODIN_FS_ROOT,
+        "pipelines_version": str(git.repo.fun.rev_parse(repo, f'origin/{PIPELINES_MAIN}')),
+        "pipelines_repo_dirty": bool(repo.is_dirty()),
+    }
 
 
 @app.get("/ping")
@@ -214,20 +225,18 @@ def _job_def(id_):
     try:
         job_loc = _get_job_file(id_, 'main.yml')
         object = read_yaml(job_loc)
-        job_def = JobDefinition(tasks=[])
-        job_def.location = job_loc
-        job_def.name = id_
-        job_def.id = id_
+        tasks = []
         for t in object['tasks']:
             if 'mounts' not in t:
                 t['mounts'] = t.pop('mount')
             name = t['name']
             t['id'] = f'{id_}--{name}'
             task_def = TaskDefinition(**t)
-            job_def.tasks.append(task_def)
-        job_def.configs = _get_job_files(job_loc)
+            tasks.append(task_def)
+        job_def = JobDefinition(tasks=tasks, location=job_loc, name=id_, id=id_, configs=_get_job_files(job_loc))
         return job_def
-    except:
+    except Exception as e:
+        LOGGER.error(e)
         return None
 
 
@@ -357,7 +366,7 @@ def get_jobs(q: Optional[str] = '*') -> JobResults:
 def get_job(job_id: str) -> JobWrapperDefinition:
     id_ = _convert_to_path(job_id)
     _update_job_repo()
-    return JobWrapperDefinition(_job_def(id_))
+    return JobWrapperDefinition(job=_job_def(id_))
 
 
 @app.post("/jobs")
@@ -377,8 +386,8 @@ def create_job(job_def: JobWrapperDefinition, token: str=Depends(oauth2_scheme))
     updated_job_def = JobDefinition(id=id_,
                                     name=id_,
                                     location=new_job_path,
-                                    creation_time=datetime.datetime.now())
-    return JobWrapperDefinition(job_def=updated_job_def)
+                                    creation_time=datetime.now())
+    return JobWrapperDefinition(job=updated_job_def)
 
 
 def _to_dict(jid, task):

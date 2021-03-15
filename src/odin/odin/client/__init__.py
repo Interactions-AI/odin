@@ -75,6 +75,12 @@ class HttpClient:
         results = response.json()
         return results
 
+    def request_job(self, name: str) -> Dict:
+        name = name.replace('/', '__')
+        response = requests.get(f'{self.url}/v1/jobs/{name}')
+        results = response.json()
+        return results
+
     def request_events(self, resource: str) -> Dict:
         """Get events for a resource over HTTP
 

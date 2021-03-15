@@ -1,6 +1,7 @@
 werkzeug == 0.16.0
 connexion
 python_dateutil >= 2.6.0
+fastapi_camelcase >= 1.0.2
 setuptools >= 21.0.0
 jsonschema == 3.2.0
 openapi-spec-validator == 0.2.9
