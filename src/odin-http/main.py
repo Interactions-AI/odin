@@ -1,10 +1,8 @@
-from typing import Optional, List, Dict
+from typing import Dict
 import glob
-import asyncio
 import requests
 import time
 import yaml
-import sys
 from fastapi import FastAPI, Depends, Body, Request
 from fastapi.middleware.cors import CORSMiddleware
 from kubernetes import client, config
@@ -15,7 +13,7 @@ import os
 import git
 from datetime import date, datetime
 import logging
-from eight_mile.utils import read_config_stream, read_yaml
+from eight_mile.utils import read_yaml
 from odin.http.models import *
 from odin.http.orm import *
 from odin.http.utils import (
@@ -312,6 +310,7 @@ def get_pipelines(q: Optional[str] = None) -> PipelineResults:
 
     s = asyncio.get_event_loop().run_until_complete(_request_status(get_ws_url(), q))
     return s
+
 
 @app.post("/pipelines")
 def create_pipeline(pipe_def: PipelineWrapperDefinition, token: str=Depends(oauth2_scheme)) -> PipelineWrapperDefinition:
