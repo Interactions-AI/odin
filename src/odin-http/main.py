@@ -47,14 +47,14 @@ LOGGER = logging.getLogger('odin-http')
 def get_db_config() -> Dict:
     cred_params = {}
     cred_params['backend'] = os.environ.get("ODIN_JOBS_BACKEND", "postgres")
-    cred_params['host'] = os.environ.get("SQL_HOST", "127.0.0.1")
-    cred_params['port'] = os.environ.get("DB_PORT", 5432)
+    cred_params['dbhost'] = os.environ.get("SQL_HOST", "127.0.0.1")
+    cred_params['dbport'] = os.environ.get("DB_PORT", 5432)
     cred_params['user'] = os.environ.get("DB_USER")
     cred_params['passwd'] = os.environ.get("DB_PASS")
     cred_params['odin_root_user'] = os.environ.get("ODIN_ROOT_USER")
     cred_params['odin_root_passwd'] = os.environ.get("ODIN_ROOT_PASS")
     cred_params['db'] = ODIN_DB
-    LOGGER.warning('%s %s %s %s', cred_params['user'], cred_params['db'], cred_params['host'], cred_params['port'])
+    LOGGER.warning('%s %s %s %s', cred_params['user'], cred_params['db'], cred_params['dbhost'], cred_params['dbport'])
     return cred_params
 
 
