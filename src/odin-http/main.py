@@ -108,9 +108,17 @@ def _get_job_repo_sha() -> str:
     sha = repo.head.object.hexsha
     return sha
 
+# https://stackoverflow.com/questions/35585236/git-ls-remote-in-gitpython
+def _ls_remote(repo):
+    for ref in repo.git.ls_remote().split('\n'):
+        hash_ref_list = ref.split('\t')
+        if hash_ref_list[1] == 'HEAD':
+            return hash_ref_list[0]
+    raise Exception("Unknown head")
+
 
 def _repo_version_match(repos: git.Repo) -> bool:
-    master_version = str(git.repo.fun.rev_parse(repos, f'origin/{PIPELINES_MAIN}'))
+    master_version = _ls_remote(repos)
     head_version = str(git.repo.fun.rev_parse(repos, 'HEAD'))
     return master_version == head_version
 
