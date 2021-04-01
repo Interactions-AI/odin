@@ -4,7 +4,7 @@ import argparse
 from odin.client import ODIN_URL, ODIN_PORT, HttpClient
 from odin.utils.formatting import print_table
 
-Row = namedtuple('Row', 'host gpu type free processes pids')
+Row = namedtuple('Row', 'host gpu type free power util memuse processes pids ')
 
 
 def _gpu2row(gpu, host):
@@ -12,9 +12,12 @@ def _gpu2row(gpu, host):
     processes = ' '.join(p['process_name'] for p in proc_group)
     pids = ' '.join(str(p['pid']) for p in proc_group)
     free = 'YES' if len(proc_group) == 0 else 'NO'
-    gpu_type = gpu['productName']
+    used_memory = sum([int(p['used_memory']) for p in proc_group])
+    power = '{: >4}/{}{}'.format(int(gpu['powerReadings']['powerDraw']), int(gpu['powerReadings']['powerLimit']), gpu['powerReadings']['unit'])
+    gpu_type = gpu['productName'].replace('GeForce ', '')
+    util = '{}{}'.format(gpu['utilization']['gpuUtil'], gpu['utilization']['unit']) if gpu['utilization']['gpuUtil'] else ''
     gpu_id = gpu['id'].split(':')[1]
-    row = Row(host=host, gpu=gpu_id, type=gpu_type, free=free, processes=processes, pids=pids)
+    row = Row(host=host, gpu=gpu_id, type=gpu_type, free=free, power=power, util=util, memuse='{}M'.format(used_memory) if used_memory else '', processes=processes, pids=pids)
     return row
 
 

@@ -157,6 +157,11 @@ class HttpClient:
         results = response.json()['pipelines']
         return results
 
+    def request_users(self):
+        response = requests.get(f'{self.url}/v1/users')
+        results = response.json()['users']
+        return results
+
     def request_logs(self, pod: str, namespace='default', **kwargs) -> str:
         """This function really shouldnt be provided here -- forget you saw this
 
@@ -174,3 +179,11 @@ class HttpClient:
         api = client.CoreV1Api()
         logs = api.read_namespaced_pod_log(pod, namespace=namespace, **kwargs)
         return logs
+
+    def app_info(self):
+        """Get information about run configuration
+
+        :return:
+        """
+        response = requests.get(f'{self.url}/v1/app')
+        return response.json()
