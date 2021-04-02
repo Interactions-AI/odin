@@ -1,9 +1,8 @@
-werkzeug == 0.16.0
-connexion
-python_dateutil >= 2.6.0
+fastapi == 0.63.0
+pydantic>=1.2.0,<2.0.0
+fastapi_camelcase == 1.0.2
 setuptools >= 21.0.0
-jsonschema == 3.2.0
-openapi-spec-validator == 0.2.9
+uvicorn[standard]
 websockets
 numpy
 pyyaml >= 5.1
@@ -11,7 +10,9 @@ GitPython
 requests
 kubernetes
 requests-async
+python-multipart
 python-jose
 bcrypt
 SQLAlchemy
 psycopg2-binary
+mead-baseline
