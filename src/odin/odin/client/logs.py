@@ -7,7 +7,7 @@ import signal
 from typing import Optional
 import websockets
 from odin import LOGGER, APIField, APIStatus
-from odin.client import ODIN_URL, ODIN_PORT, HttpClient
+from odin.client import ODIN_URL, ODIN_PORT, ODIN_SCHEME, HttpClient
 
 
 async def request_logs(
@@ -93,7 +93,7 @@ def main():
     parser.add_argument(
         '--scheme',
         choices={'http', 'https', 'wss', 'ws'},
-        default='https',
+        default=ODIN_SCHEME,
         help='Websocket connection protocol, use `wss` for remote connections and `ws` for localhost',
     )
     args = parser.parse_args()

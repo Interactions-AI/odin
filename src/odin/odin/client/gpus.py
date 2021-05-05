@@ -1,7 +1,7 @@
 """Websocket/HTTP client to get the status a job."""
 from collections import namedtuple
 import argparse
-from odin.client import ODIN_URL, ODIN_PORT, HttpClient
+from odin.client import ODIN_URL, ODIN_PORT, ODIN_SCHEME, HttpClient
 from odin.utils.formatting import print_table
 
 Row = namedtuple('Row', 'host gpu type free power util memuse processes pids ')
@@ -40,7 +40,7 @@ def main():
     parser.add_argument('--host', default=ODIN_URL, type=str)
     parser.add_argument('--port', default=ODIN_PORT)
     parser.add_argument(
-        '--scheme', choices={'http', 'https'}, default='https', help='Connection protocol, supports HTTP and HTTPs',
+        '--scheme', choices={'http', 'https'}, default=ODIN_SCHEME, help='Connection protocol, supports HTTP and HTTPs',
     )
     args = parser.parse_args()
 

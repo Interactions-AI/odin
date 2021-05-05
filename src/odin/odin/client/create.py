@@ -4,7 +4,7 @@ import os
 import json
 import argparse
 from getpass import getuser
-from odin.client import ODIN_URL, ODIN_PORT, HttpClient
+from odin.client import ODIN_URL, ODIN_PORT, ODIN_SCHEME, HttpClient
 from odin.utils.auth import get_jwt_token
 
 
@@ -29,7 +29,7 @@ def main():
     parser.add_argument('--username', '-u', help="Username", default=getuser())
     parser.add_argument('--password', '-p', help="Password")
     parser.add_argument(
-        '--scheme', choices={'http', 'https'}, default='https', help='Connection protocol, use `http` for REST.'
+        '--scheme', choices={'http', 'https'}, default=ODIN_SCHEME, help='Connection protocol, use `http` for REST.'
     )
     args = parser.parse_args()
     url = f'{args.scheme}://{args.host}:{args.port}'

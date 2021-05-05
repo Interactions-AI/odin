@@ -6,7 +6,7 @@ import argparse
 import websockets
 from odin import LOGGER, APIField, APIStatus
 from odin.k8s import Event
-from odin.client import ODIN_URL, ODIN_PORT, HttpClient
+from odin.client import ODIN_URL, ODIN_PORT, ODIN_SCHEME, HttpClient
 from odin.utils.formatting import print_table
 
 
@@ -60,7 +60,7 @@ def main():
     parser.add_argument(
         '--scheme',
         choices={'wss', 'ws', 'http', 'https'},
-        default='https',
+        default=ODIN_SCHEME,
         help='Connection protocol, use `http` for REST, use `wss` for remote connections and `ws` for localhost',
     )
     parser.add_argument('resource', help="The name of the resource to describe")

@@ -4,7 +4,7 @@ import os
 import json
 import argparse
 from getpass import getuser
-from odin.client import ODIN_URL, ODIN_PORT, HttpClient
+from odin.client import ODIN_URL, ODIN_PORT, ODIN_SCHEME, HttpClient
 from odin.utils.auth import get_jwt_token
 from baseline.utils import color, Colors
 
@@ -49,7 +49,7 @@ def main():
     parser.add_argument(
         '--scheme',
         choices={'https', 'http'},
-        default='https',
+        default=ODIN_SCHEME,
         help="Use https for remote connections and http for local",
     )
     args = parser.parse_args()

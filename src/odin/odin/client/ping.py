@@ -6,7 +6,7 @@ from datetime import datetime
 import json
 import websockets
 from odin import LOGGER, APIField, APIStatus
-from odin.client import ODIN_URL, ODIN_PORT
+from odin.client import ODIN_URL, ODIN_PORT, ODIN_SCHEME
 
 
 async def ping(uri: str, message: str) -> None:
@@ -33,7 +33,7 @@ def main():
     parser.add_argument(
         '--scheme',
         choices={'wss', 'ws'},
-        default='wss',
+        default=ODIN_SCHEME,
         help='Websocket connection protocol, use `wss` for remote connections and `ws` for localhost',
     )
     parser.add_argument('--message', default=datetime.now().strftime("%Y-%m-%dT%H:%M:%S"))
