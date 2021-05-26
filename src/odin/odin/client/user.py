@@ -6,7 +6,7 @@ import signal
 import requests
 from prompt_toolkit import prompt
 from odin import LOGGER
-from odin.client import ODIN_URL, ODIN_PORT
+from odin.client import ODIN_URL, ODIN_PORT, ODIN_SCHEME
 from odin.utils.auth import get_jwt_token
 
 
@@ -68,7 +68,7 @@ def main():
     parser.add_argument('--password', '-p', help="New or updated password")
     parser.add_argument('--firstname', '-f', help="First name")
     parser.add_argument('--lastname', '-l', help="Last name")
-    parser.add_argument('--scheme', choices={'http', 'https'}, default='https', help='The protocol to communicate over')
+    parser.add_argument('--scheme', choices={'http', 'https'}, default=ODIN_SCHEME, help='The protocol to communicate over')
     args = parser.parse_args()
 
     if not args.username:

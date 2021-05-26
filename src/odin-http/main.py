@@ -263,7 +263,7 @@ def get_user(user_id: str) -> UserWrapperDefinition:
 
 @app.post("/users")
 def create_user(user_def: UserWrapperDefinition, token: str=Depends(oauth2_scheme)) -> UserWrapperDefinition:
-    user = dao.create_user(user_def)
+    user = dao.create_user(user_def.user)
     user_def = _user_def(user)
     return UserWrapperDefinition(user=user_def)
 

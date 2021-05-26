@@ -5,7 +5,7 @@ import asyncio
 import argparse
 import websockets
 from odin import LOGGER, APIField, APIStatus
-from odin.client import ODIN_URL, ODIN_PORT, HttpClient
+from odin.client import ODIN_URL, ODIN_PORT, ODIN_SCHEME, HttpClient
 
 
 async def request_data(url: str, resource: str) -> None:
@@ -43,7 +43,7 @@ def main():
     parser.add_argument(
         '--scheme',
         choices={'wss', 'ws', 'http', 'https'},
-        default='https',
+        default=ODIN_SCHEME,
         help='Connection protocol, use `http` for REST, use `wss` for remote connections and `ws` for localhost',
     )
     parser.add_argument('resource', help="The name of the resource to describe")
