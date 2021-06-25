@@ -33,7 +33,7 @@ import jose.jwt as jwt
 # This indicates what branch we should be looking at in git for its pipelines
 SHORT_ID = ShortId()
 PIPELINES_MAIN = os.environ.get('ODIN_PIPELINES_MAIN', 'master')
-RENDERED_TEMPLATES = os.path.get('ODIN_RENDERED', 'rendered')
+RENDERED_TEMPLATES = os.environ.get('ODIN_RENDER_PATH', 'rendered')
 JWT_ISSUER = os.environ.get('ODIN_AUTH_ISSUER', 'com.interactions')
 JWT_SECRET = os.environ.get('ODIN_SECRET')
 JWT_LIFETIME_SECONDS = os.environ.get('ODIN_TOKEN_DURATION', 60 * 60 * 12)
@@ -79,14 +79,15 @@ def _generate_template_job_suffix(prefix: str) -> str:
 def _substitute_template(job_path, context_map: Dict):
     # Look for all templated files and replace them all
 
-    target_dir = _generate_template_job_suffix(os.path.join(RENDERED_TEMPLATES, job_path))
+    target_dir = _generate_template_job_suffix(os.path.join(ODIN_FS_ROOT, RENDERED_TEMPLATES, job_path))
 
-    if not os.path.exists(RENDERED_TEMPLATES):
-        os.makedirs(RENDERED_TEMPLATES, exist_ok=True)
     if not os.path.exists(target_dir):
-        os.makedirs(RENDERED_TEMPLATES, exist_ok=True)
-    for file in glob.glob(os.path.join(job_path, TEMPLATE_SUFFIX)):
-        output_file = os.path.basename(file.replace(TEMPLATE_SUFFIX, ""))
+        os.makedirs(target_dir, exist_ok=True)
+
+    templ_path = os.path.join(ODIN_FS_ROOT, job_path)
+    for base_file in os.listdir(templ_path):
+        file = os.path.join(templ_path, base_file)
+        output_file = base_file.replace(TEMPLATE_SUFFIX, "")
         rendered_file = os.path.join(target_dir, output_file)
         # If its not a template, copy it over
         if not file.endswith(TEMPLATE_SUFFIX):
