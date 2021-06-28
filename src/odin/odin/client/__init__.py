@@ -50,12 +50,11 @@ class HttpClient:
         :param context: Optional context values
         """
         job = encode_path(work)
-        context_kv = [{'key': k, 'value': v } for k, v in context.items()]
 
         response = requests.post(
             f'{self.url}/v1/pipelines',
             headers={'Authorization': f'Bearer {self.jwt_token}'},
-            json={"pipeline": {"job": job}, "context": context_kv},
+            json={"pipeline": {"job": job}, "context": context},
         )
         if response.status_code == 401:
             raise ValueError("Invalid login")

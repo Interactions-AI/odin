@@ -76,7 +76,19 @@ def _generate_template_job_suffix(prefix: str) -> str:
     return f'{prefix}{short_id}'
 
 
-def _substitute_template(job_path, context_map: Dict):
+def _is_template(job_path):
+    full_path = os.path.join(ODIN_FS_ROOT, job_path)
+    if not os.path.exists(full_path) or not os.path.isdir(full_path):
+        return False
+
+    results = glob.glob(os.path.join(full_path, f'*{TEMPLATE_SUFFIX}'))
+    if results:
+        LOGGER.info("%s is a template", job_path)
+        return True
+    return False
+
+
+def _substitute_template(job_path, context_map: dict):
     # Look for all templated files and replace them all
 
     target_dir = _generate_template_job_suffix(os.path.join(ODIN_FS_ROOT, RENDERED_TEMPLATES, job_path))
@@ -85,6 +97,9 @@ def _substitute_template(job_path, context_map: Dict):
         os.makedirs(target_dir, exist_ok=True)
 
     templ_path = os.path.join(ODIN_FS_ROOT, job_path)
+    LOGGER.info("Generating template job at %s", target_dir)
+    if 'name' not in context_map:
+        context_map['name'] = os.path.basename(target_dir)
     for base_file in os.listdir(templ_path):
         file = os.path.join(templ_path, base_file)
         output_file = base_file.replace(TEMPLATE_SUFFIX, "")
@@ -370,9 +385,8 @@ def get_pipelines(q: Optional[str] = None) -> PipelineResults:
 def create_pipeline(pipe_def: PipelineWrapperDefinition, token: str=Depends(oauth2_scheme)) -> PipelineWrapperDefinition:
     job = _convert_to_path(pipe_def.pipeline.job)
     _update_job_repo()
-    if pipe_def.context:
-        context_map = {kv.key: kv.value for kv in pipe_def.context}
-        job = _substitute_template(job, context_map)
+    if _is_template(job):
+        job = _substitute_template(job, pipe_def.context or {})
     pipe_id = _run_ws(_submit_job(get_ws_url(), job))
     p = PipelineDefinition(name=pipe_id, id=pipe_id, job=job)
     return PipelineWrapperDefinition(pipeline=p)

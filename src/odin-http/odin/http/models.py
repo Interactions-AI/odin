@@ -90,7 +90,7 @@ class PipelineDefinition(Model):
 
 class PipelineWrapperDefinition(Model):
     pipeline: Optional[PipelineDefinition] = None
-    context: List[KeyValueDefinition] = []
+    context: dict = []
 
 
 class PipelineResults(Model):
