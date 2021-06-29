@@ -2,9 +2,12 @@ from typing import Dict
 import glob
 import requests
 import time
+from shutil import copyfile
 import yaml
+from shortid import ShortId
 from fastapi import FastAPI, Depends, Body, Request
 from fastapi.middleware.cors import CORSMiddleware
+from jinja2 import Template
 from kubernetes import client, config
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 import asyncio
@@ -28,7 +31,9 @@ from odin.http.utils import (
 )
 import jose.jwt as jwt
 # This indicates what branch we should be looking at in git for its pipelines
+SHORT_ID = ShortId()
 PIPELINES_MAIN = os.environ.get('ODIN_PIPELINES_MAIN', 'master')
+RENDERED_TEMPLATES = os.environ.get('ODIN_RENDER_PATH', 'rendered')
 JWT_ISSUER = os.environ.get('ODIN_AUTH_ISSUER', 'com.interactions')
 JWT_SECRET = os.environ.get('ODIN_SECRET')
 JWT_LIFETIME_SECONDS = os.environ.get('ODIN_TOKEN_DURATION', 60 * 60 * 12)
@@ -42,7 +47,7 @@ WS_PORT = os.environ.get('ODIN_WS_PORT', 30000)
 ODIN_DB = os.getenv('ODIN_DB', 'odin_db')
 ODIN_FS_ROOT = os.getenv('ODIN_FS_ROOT', '/data/pipelines')
 LOGGER = logging.getLogger('odin-http')
-
+TEMPLATE_SUFFIX = ".jinja2"
 
 def get_db_config() -> Dict:
     cred_params = {}
@@ -60,6 +65,62 @@ def get_db_config() -> Dict:
 
 def get_ws_url():
     return f'{WS_SCHEME}://{WS_HOST}:{WS_PORT}'
+
+def _generate_template_job_suffix(prefix: str) -> str:
+    """This generates a new name from the provided prefix suffixed by a shortid
+
+    :param prefix: A provided prefix
+    :returns: A unique name that is a combination of the prefix and a shortid
+    """
+    short_id = SHORT_ID.generate().lower().replace('_', '-')[:4]
+    return f'{prefix}{short_id}'
+
+
+def _is_template(job_path):
+    full_path = os.path.join(ODIN_FS_ROOT, job_path)
+    if not os.path.exists(full_path) or not os.path.isdir(full_path):
+        return False
+
+    results = glob.glob(os.path.join(full_path, f'*{TEMPLATE_SUFFIX}'))
+    if results:
+        LOGGER.info("%s is a template", job_path)
+        return True
+    return False
+
+
+def _substitute_template(job_path, context_map: dict):
+    # Look for all templated files and replace them all
+
+    target_dir = _generate_template_job_suffix(os.path.join(ODIN_FS_ROOT, RENDERED_TEMPLATES, job_path))
+
+    if not os.path.exists(target_dir):
+        os.makedirs(target_dir, exist_ok=True)
+
+    templ_path = os.path.join(ODIN_FS_ROOT, job_path)
+    LOGGER.info("Generating template job at %s", target_dir)
+    if 'name' not in context_map:
+        context_map['name'] = os.path.basename(target_dir)
+    for base_file in os.listdir(templ_path):
+        file = os.path.join(templ_path, base_file)
+        output_file = base_file.replace(TEMPLATE_SUFFIX, "")
+        rendered_file = os.path.join(target_dir, output_file)
+        # If its not a template, copy it over
+        if not file.endswith(TEMPLATE_SUFFIX):
+            copyfile(file, os.path.join(target_dir, rendered_file))
+            continue
+
+        with open(file) as rf:
+            source = rf.read()
+            template = Template(source)
+            rendered_yaml = template.render(context_map)
+
+        # Convert it to a YAML object
+        yy = yaml.load(rendered_yaml, Loader=yaml.FullLoader)
+
+        with open(rendered_file, "w", encoding='utf-8') as wf:
+            yaml.safe_dump(yy, wf)
+            LOGGER.info("Wrote out %s", rendered_file)
+    return target_dir
 
 
 class VersionedAPI(FastAPI):
@@ -324,6 +385,8 @@ def get_pipelines(q: Optional[str] = None) -> PipelineResults:
 def create_pipeline(pipe_def: PipelineWrapperDefinition, token: str=Depends(oauth2_scheme)) -> PipelineWrapperDefinition:
     job = _convert_to_path(pipe_def.pipeline.job)
     _update_job_repo()
+    if _is_template(job):
+        job = _substitute_template(job, pipe_def.context or {})
     pipe_id = _run_ws(_submit_job(get_ws_url(), job))
     p = PipelineDefinition(name=pipe_id, id=pipe_id, job=job)
     return PipelineWrapperDefinition(pipeline=p)
