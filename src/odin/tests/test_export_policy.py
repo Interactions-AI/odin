@@ -7,11 +7,11 @@ from unittest.mock import MagicMock
 from baseline.utils import get_metric_cmp
 from odin.model.selector import ExperimentRepoExportPolicy, BestOfBatchExportPolicy, BestExportPolicy
 from odin.store import MemoryStore, Store
-from xpctl.xpclient.models import Experiment, Result
-from xpctl.xpclient import Configuration
-from xpctl.xpclient.api import XpctlApi
-from xpctl.xpclient import ApiClient
-from xpctl.xpclient.rest import ApiException
+from xpclient.models import Experiment, Result
+from xpclient import Configuration
+from xpclient.api import XpctlApi
+from xpclient import ApiClient
+from xpclient.rest import ApiException
 import urllib3
 import warnings
 
