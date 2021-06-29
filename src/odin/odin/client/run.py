@@ -5,8 +5,9 @@ import os
 import asyncio
 import json
 import signal
-import requests
+from typing import Dict
 import websockets
+from mead.utils import parse_and_merge_overrides
 from odin import LOGGER, APIField, APIStatus
 from odin.client import ODIN_URL, ODIN_PORT, ODIN_SCHEME, HttpClient
 from odin.utils.auth import get_jwt_token
@@ -34,13 +35,14 @@ async def schedule_pipeline(ws, work) -> None:
             result = json.loads(await websocket.recv())
 
 
-def schedule_pipeline_http(url: str, jwt_token: str, work: str) -> None:
+def schedule_pipeline_http(url: str, jwt_token: str, work: str, context: Dict) -> None:
     """Request the status over HTTP
     :param url: the base URL
     :param jwt_token: The JWT token representing this authentication
     :param work: The pipeline ID
     """
-    results = HttpClient(url, jwt_token=jwt_token).schedule_pipeline(work)
+
+    results = HttpClient(url, jwt_token=jwt_token).schedule_pipeline(work, context)
     print(json.dumps(results))
 
 
@@ -49,7 +51,7 @@ def main():
     """
     signal.signal(signal.SIGINT, lambda *args, **kwargs: exit(0))
 
-    parser = argparse.ArgumentParser(description='Websocket-based Pipeline scheduler')
+    parser = argparse.ArgumentParser(description='HTTP or Websocket-based Pipeline scheduler')
     parser.add_argument('work', help='Job')
     parser.add_argument('--host', default=ODIN_URL, type=str)
     parser.add_argument('--port', default=ODIN_PORT)
@@ -62,21 +64,27 @@ def main():
         default=ODIN_SCHEME,
         help='Connection protocol, use `http` for REST, use `wss` for remote connections and `ws` for localhost',
     )
-    args = parser.parse_args()
+
+    args, overrides = parser.parse_known_args()
+    context = parse_and_merge_overrides({}, overrides, pre='x')
+
+
     url = f'{args.scheme}://{args.host}:{args.port}'
 
     if args.scheme.startswith('ws'):
+        if context:
+            LOGGER.warning("Context is ignored by web-socket tier")
         asyncio.get_event_loop().run_until_complete(schedule_pipeline(url, args.work))
     else:
         jwt_token = get_jwt_token(url, args.token, args.username, args.password)
         try:
-            schedule_pipeline_http(url, jwt_token, args.work)
+            schedule_pipeline_http(url, jwt_token, args.work, context)
         except ValueError:
             # Try deleting the token file and start again
             if os.path.exists(args.token):
                 os.remove(args.token)
                 jwt_token = get_jwt_token(url, args.token, args.username, args.password)
-                schedule_pipeline_http(url, jwt_token, args.work)
+                schedule_pipeline_http(url, jwt_token, args.work, context)
 
 
 if __name__ == '__main__':

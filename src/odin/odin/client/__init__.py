@@ -43,16 +43,18 @@ class HttpClient:
         else:
             self.jwt_token = jwt_token
 
-    def schedule_pipeline(self, work: str) -> Dict:
+    def schedule_pipeline(self, work: str, context: Dict={}) -> Dict:
         """Request the status over HTTP
         :param url: the base URL
         :param work: The pipeline ID
+        :param context: Optional context values
         """
         job = encode_path(work)
+
         response = requests.post(
             f'{self.url}/v1/pipelines',
             headers={'Authorization': f'Bearer {self.jwt_token}'},
-            json={"pipeline": {"job": job}},
+            json={"pipeline": {"job": job}, "context": context},
         )
         if response.status_code == 401:
             raise ValueError("Invalid login")
