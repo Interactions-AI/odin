@@ -6,6 +6,7 @@ uvicorn[standard]
 websockets
 numpy
 shortid
+jinja2
 pyyaml >= 5.1
 GitPython
 requests
