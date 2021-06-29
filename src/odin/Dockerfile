@@ -32,7 +32,7 @@ COPY . .
 RUN python3.6 -m pip install .
 
 # Install baseline
-RUN python3.6 -m pip install mead-baseline && python3.6 -m pip install mead-xpctl
+RUN python3.6 -m pip install mead-baseline && python3.6 -m pip install mead-xpctl-client
 
 # Install hpctl
 ADD https://github.com/mead-ml/hpctl/archive/master.tar.gz /usr/odin/hpctl-master.tar.gz
