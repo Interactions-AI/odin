@@ -5,6 +5,7 @@ setuptools >= 21.0.0
 uvicorn[standard]
 websockets
 numpy
+shortid
 pyyaml >= 5.1
 GitPython
 requests
