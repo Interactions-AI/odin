@@ -40,6 +40,7 @@ setup(
         'requests',
         'pandas',
         'mead-baseline >= 2.0.1',
+        'mead-xpctl-client',
     ],
     extras_require={'test': ['pytest']},
     entry_points={
