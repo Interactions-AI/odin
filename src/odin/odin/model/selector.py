@@ -14,9 +14,9 @@ from typing import List, Dict, Tuple, Callable, Type, Optional, Union
 from baseline.utils import exporter, get_metric_cmp, optional_params, read_config_stream
 from mead.utils import convert_path, get_dataset_from_key
 from odin.store import Store, create_store_backend
-from xpctl import xpctl_client
-from xpctl.xpclient.api import XpctlApi
-from xpctl.xpclient.rest import ApiException
+from xpclient.utils import xpctl_client
+from xpclient.api import XpctlApi
+from xpclient.rest import ApiException
 
 
 __all__ = []
