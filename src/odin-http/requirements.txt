@@ -1,10 +1,12 @@
-fastapi == 0.63.0
+fastapi == 0.65.2
 pydantic>=1.2.0,<2.0.0
 fastapi_camelcase == 1.0.2
 setuptools >= 21.0.0
 uvicorn[standard]
 websockets
 numpy
+shortid
+jinja2
 pyyaml >= 5.1
 GitPython
 requests
