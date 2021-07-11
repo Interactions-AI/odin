@@ -1,6 +1,7 @@
 """Websocket/HTTP client to get the status a job."""
 from collections import namedtuple
 import argparse
+from eight_mile.utils import is_sequence
 from odin.client import ODIN_URL, ODIN_PORT, ODIN_SCHEME, HttpClient
 from odin.utils.formatting import print_table
 
@@ -9,10 +10,16 @@ Row = namedtuple('Row', 'host gpu type free power util memuse processes pids ')
 
 def _gpu2row(gpu, host):
     proc_group = gpu.get('processes', [])
-    processes = ' '.join(p['process_name'] for p in proc_group)
-    pids = ' '.join(str(p['pid']) for p in proc_group)
-    free = 'YES' if len(proc_group) == 0 else 'NO'
-    used_memory = sum([int(p['used_memory']) for p in proc_group])
+    if is_sequence(proc_group):
+        processes = ' '.join(p['process_name'] for p in proc_group)
+        pids = ' '.join(str(p['pid']) for p in proc_group)
+        free = 'YES' if len(proc_group) == 0 else 'NO'
+        used_memory = sum([int(p['used_memory']) for p in proc_group])
+    else:
+        processes = 'NA'
+        pids = 'NA'
+        free = 'NA'
+        used_memory = -1
     power = '{: >4}/{}{}'.format(int(gpu['powerReadings']['powerDraw']), int(gpu['powerReadings']['powerLimit']), gpu['powerReadings']['unit'])
     gpu_type = gpu['productName'].replace('GeForce ', '')
     util = '{}{}'.format(gpu['utilization']['gpuUtil'], gpu['utilization']['unit']) if gpu['utilization']['gpuUtil'] else ''
