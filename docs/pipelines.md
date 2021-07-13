@@ -70,3 +70,47 @@ The `main.yml` references the PVC where the pipelines exist in the `mount` secti
 ```
 
 For this particular command, `--basedir` also specifies a place where logs and checkpoints are stored, and here the descriptor uses the processor variables to specify the output workspace location.
+
+## Templating
+
+The HTTP server supports server side template rendering of pipelines using [Jinja2](https://jinja2docs.readthedocs.io/en/stable/).  Templating can be used to customize a pipeline at runtime without having to change any configuration files.  Any files in a pipeline directory that end in a `.jinja2` extension will be substitute when a pipeline run is launched, and the substituted pipeline will be created as a sub-directory in the render area (`rendered` by default). This sub-directory is not git-backed and the jobs rendered pipelines can be cleaned up afterward by using a `CronJob`.
+
+To customize a `main.yml`, rename it to `main.yml.jinja2` and place the templating code inside the file. In the example below, we will use it to set an image name and a deep-learning backend
+
+```yaml
+
+{% if version is not defined or not version  %}
+{%   set version = 'gpu' %}
+{% endif %}
+name: sst2
+tasks:
+- args:
+  - --basedir
+  - ${RUN_PATH}/${TASK_ID}
+  - --config
+  - ${WORK_PATH}/sst2.yml
+  - --logging
+  - ${ROOT_PATH}/logging.json
+  - --settings
+  - /data/mead-settings.json
+  - --reporting
+  - xpctl
+  - --xpctl:label
+  - ${TASK_ID}
+  - --datasets
+  - ${ROOT_PATH}/datasets.yml
+  - --embeddings
+  - ${ROOT_PATH}/embeddings.yml
+  - --backend
+  - {{ backend|default('pytorch') }}
+  command: mead-train
+  depends: null
+  image: {{ "meadml/mead2-" ~ backend|default('pytorch') ~ "-" ~ version ~ ":latest" }}
+
+```
+To set these values from the command line client:
+
+```
+odin-run sst2 --x:backend tf
+```
+
