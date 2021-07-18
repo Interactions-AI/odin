@@ -8,9 +8,8 @@ import signal
 from typing import Dict
 import websockets
 from mead.utils import parse_and_merge_overrides
-from odin import LOGGER, APIField, APIStatus
-from odin.client import ODIN_URL, ODIN_PORT, ODIN_SCHEME, HttpClient
-from odin.utils.auth import get_jwt_token
+from odin.api import ODIN_URL, ODIN_PORT, ODIN_SCHEME, HttpClient, ODIN_API_LOGGER, APIField, APIStatus
+from odin.api.auth import get_jwt_token
 
 
 async def schedule_pipeline(ws, work) -> None:
@@ -24,14 +23,14 @@ async def schedule_pipeline(ws, work) -> None:
         result = json.loads(await websocket.recv())
         while result[APIField.STATUS] != APIStatus.END:
             if result[APIField.STATUS] == APIStatus.ERROR:
-                LOGGER.error(result)
+                ODIN_API_LOGGER.error(result)
                 return
 
             if result[APIField.RESPONSE].startswith('PIPE_ID'):
                 pipe_id = result.split(' ')[-1]
-                LOGGER.info('Started %s', pipe_id)
+                ODIN_API_LOGGER.info('Started %s', pipe_id)
             else:
-                LOGGER.info(result[APIField.RESPONSE])
+                ODIN_API_LOGGER.info(result[APIField.RESPONSE])
             result = json.loads(await websocket.recv())
 
 
@@ -73,7 +72,7 @@ def main():
 
     if args.scheme.startswith('ws'):
         if context:
-            LOGGER.warning("Context is ignored by web-socket tier")
+            ODIN_API_LOGGER.warning("Context is ignored by web-socket tier")
         asyncio.get_event_loop().run_until_complete(schedule_pipeline(url, args.work))
     else:
         jwt_token = get_jwt_token(url, args.token, args.username, args.password)

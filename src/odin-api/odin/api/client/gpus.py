@@ -2,8 +2,8 @@
 from collections import namedtuple
 import argparse
 from eight_mile.utils import is_sequence
-from odin.client import ODIN_URL, ODIN_PORT, ODIN_SCHEME, HttpClient
-from odin.utils.formatting import print_table
+from odin.api import ODIN_URL, ODIN_PORT, ODIN_SCHEME, HttpClient
+from odin.api.formatting import print_table
 
 Row = namedtuple('Row', 'host gpu type free power util memuse processes pids ')
 

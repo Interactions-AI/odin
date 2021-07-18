@@ -14,7 +14,7 @@ import git
 from bson.json_util import dumps as bson_dumps
 from eight_mile.utils import read_config_stream
 from mead.utils import convert_path
-from odin import ODIN_LOGO, APIField, APIStatus
+from odin import ODIN_LOGO
 from odin.cleanup import cleanup
 from odin.core import read_pipeline_config
 from odin.generate import generate_pipeline
@@ -29,6 +29,23 @@ STORE = None
 CACHE = None
 ROOT_PATH = None
 DATA_PATH = None
+
+
+class APIField:
+    """Keys that we use when communicating between server and clients."""
+
+    STATUS = 'status'
+    RESPONSE = 'response'
+    COMMAND = 'command'
+    REQUEST = 'request'
+
+
+class APIStatus:
+    """Status codes used between the server and client."""
+
+    OK = 'OK'
+    ERROR = 'ERROR'
+    END = 'END'
 
 
 def seralize(obj: Any) -> str:

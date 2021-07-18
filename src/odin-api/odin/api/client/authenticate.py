@@ -2,9 +2,8 @@
 import argparse
 from getpass import getuser
 import os
-from odin import LOGGER
-from odin.client import ODIN_URL, ODIN_PORT, ODIN_SCHEME
-from odin.utils.auth import get_jwt_token
+from odin.api import ODIN_URL, ODIN_PORT, ODIN_SCHEME, ODIN_API_LOGGER
+from odin.api.auth import get_jwt_token
 
 
 def authenticate_user(url: str, token_path: str, username: str, password: str) -> None:
@@ -17,7 +16,7 @@ def authenticate_user(url: str, token_path: str, username: str, password: str) -
     if os.path.exists(token_path):
         os.remove(token_path)
     jwt_token = get_jwt_token(url, token_path, username, password)
-    LOGGER.info(jwt_token)
+    ODIN_API_LOGGER.info(jwt_token)
 
 
 def main():

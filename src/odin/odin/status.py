@@ -2,13 +2,11 @@
 """
 import argparse
 from collections import namedtuple
-from typing import Union, List, Tuple, Set, Optional
+from typing import Union, List, Tuple
 
-from baseline.utils import exporter, listify, read_config_stream, color, Colors
-from mead.utils import convert_path
-from odin.store import Store, create_store_backend
-from odin.executor import PipelineStatus
-from odin.utils.formatting import print_table
+from eight_mile.utils import listify
+from baseline.utils import exporter
+from odin.store import Store
 
 __all__ = []
 export = exporter(__all__)
@@ -80,66 +78,3 @@ def get_status(work: str, store: Store) -> Tuple[Pipeline, List[Row]]:
     rows += ids2rows(job_names, Store.WAITING, store)
     return pipe, rows
 
-
-def show_status(pipe: Pipeline, rows: List[Row], columns: Optional[Set[str]] = None, all_cols: bool = False) -> None:
-    """Show the status for a pipeline.
-
-    :param pipe: Information about the pipeline itself.
-    :param rows: The rows of the table.
-    :param columns: A set of columns to include in the output.
-    :param all_cols: Include all the columns in the output.
-    """
-    status = None
-    if pipe.status == PipelineStatus.DONE:
-        status = color(pipe.status, Colors.CYAN)
-    elif pipe.status == PipelineStatus.RUNNING:
-        status = color(pipe.status, Colors.GREEN)
-    elif pipe.status == PipelineStatus.TERMINATED:
-        status = color(pipe.status, Colors.RED)
-    elif pipe.status == PipelineStatus.BUILDING:
-        status = color(pipe.status, Colors.YELLOW)
-    width = max(len(pipe.label), len('Finished'))
-    print(f'{pipe.label:<{width}} --> {status}')
-    if pipe.submitted is not None:
-        start = "Started"
-        print(f'{start:<{width}} --> {pipe.submitted}')
-    if pipe.completed is not None:
-        fin = "Finished"
-        print(f'{fin:<{width}} --> {pipe.completed}')
-    print()
-    if columns:
-        columns.update(DEFAULT_COLUMNS)
-    else:
-        columns = DEFAULT_COLUMNS
-    if rows:
-        if all_cols:
-            columns.update(rows[0]._fields)
-        print_table(rows, columns)
-
-
-def main():
-    """Take in a job and get back its status
-
-    TODO: support passing in specific Job IDs and regex
-    """
-    parser = argparse.ArgumentParser(description='Get job status')
-    parser.add_argument('work', help='Pipeline or Job')
-    parser.add_argument('--cred', help='cred file', type=convert_path, required=True)
-    parser.add_argument('--format', help='Format the output', default="human")
-    parser.add_argument('--columns', nargs="+", default=[], help="Columns of the status to show.")
-    parser.add_argument('--all', action='store_true', help="Show all columns of the status message.")
-    args = parser.parse_args()
-    cred_params = read_config_stream(args.cred)
-    store = create_store_backend(**cred_params['jobs_db'])
-    work = store.parents_like(args.work)
-    if not work:
-        print('No job found')
-    for parent in work:
-        try:
-            show_status(*get_status(parent, store), columns=set(args.columns), all_cols=args.all)
-        except Exception:
-            print('ERROR: Skipping {}'.format(parent))
-
-
-if __name__ == "__main__":
-    main()
