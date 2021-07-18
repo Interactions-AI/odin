@@ -3,7 +3,7 @@
 from itertools import chain
 from typing import List, Set, Optional
 from collections import namedtuple
-from baseline.utils import color
+from baseline.utils import color, Colors
 
 DEFAULT_COLUMNS = {'task', 'status', 'command', 'resource_id', 'submitted'}
 
