@@ -1,12 +1,31 @@
 """Client code specific constants."""
-import os
-import requests
-from typing import Dict
-from odin.utils.auth import _authenticate
 
+from typing import Dict
+from baseline.utils import get_console_logger
+from odin.api.auth import *
+from odin.api.version import *
+
+ODIN_API_LOGGER = get_console_logger('odin', env_key='ODIN_LOG_LEVEL')
 ODIN_URL = os.environ.get('ODIN_URL', 'localhost')
 ODIN_PORT = os.environ.get('ODIN_PORT', 9003)
 ODIN_SCHEME = os.environ.get('ODIN_SCHEME', 'https')
+
+class APIField:
+    """Keys that we use when communicating between server and clients."""
+
+    STATUS = 'status'
+    RESPONSE = 'response'
+    COMMAND = 'command'
+    REQUEST = 'request'
+
+
+class APIStatus:
+    """Status codes used between the server and client."""
+
+    OK = 'OK'
+    ERROR = 'ERROR'
+    END = 'END'
+
 
 
 def encode_path(path: str) -> str:
@@ -39,7 +58,7 @@ class HttpClient:
         username = username
         password = password
         if username is not None and password is not None:
-            self.jwt_token = _authenticate(self.url, username, password)
+            self.jwt_token = authenticate(self.url, username, password)
         else:
             self.jwt_token = jwt_token
 

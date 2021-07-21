@@ -9,7 +9,8 @@ from pathlib import Path
 from typing import List, Dict, Callable, NewType, Optional
 import git
 
-from baseline.utils import exporter, optional_params, read_config_stream, import_user_module
+from eight_mile.utils import read_config_stream
+from baseline.utils import exporter, optional_params, import_user_module
 from odin.core import create_graph, _to_kwargs, wire_inputs, format_output
 from odin.dag import topo_sort, find_children, dot_graph
 from odin.store import create_store_backend

@@ -4,8 +4,7 @@ import json
 import asyncio
 import argparse
 import websockets
-from odin import LOGGER, APIField, APIStatus
-from odin.client import ODIN_URL, ODIN_PORT, ODIN_SCHEME, HttpClient
+from odin.api import ODIN_URL, ODIN_PORT, ODIN_SCHEME, HttpClient, ODIN_API_LOGGER, APIField, APIStatus
 
 
 async def request_data(url: str, resource: str) -> None:
@@ -19,7 +18,7 @@ async def request_data(url: str, resource: str) -> None:
         await websocket.send(json.dumps({APIField.COMMAND: 'DATA', APIField.REQUEST: {'resource': resource}}))
         resp = json.loads(await websocket.recv())
         if resp[APIField.STATUS] == APIStatus.ERROR:
-            LOGGER.error(resp)
+            ODIN_API_LOGGER.error(resp)
             return
         if resp[APIField.STATUS] == APIStatus.OK:
             print(json.dumps(resp[APIField.RESPONSE]))

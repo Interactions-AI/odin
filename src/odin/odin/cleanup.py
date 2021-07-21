@@ -12,7 +12,7 @@ from mead.utils import convert_path
 from odin import LOGGER
 from odin.k8s import KubernetesTaskManager, TaskManager
 from odin.store import Store, create_store_backend
-from odin.utils.formatting import print_table
+from odin.api.formatting import print_table
 
 
 __all__ = []
@@ -80,27 +80,3 @@ def cleanup(
         if store.remove(work):
             purged.add(work)
     return [Cleaned(j, done(j, cleaned), done(j, purged), done(j, removed)) for j in chain([work], children)]
-
-
-def main():
-    """Clean up a job
-    """
-    parser = argparse.ArgumentParser(description='Clean up a job')
-    parser.add_argument('work', help='Job')
-    parser.add_argument('--cred', help='cred file', type=convert_path, required=True)
-    parser.add_argument('--db', action='store_true', help="Also remove from the jobs db")
-    parser.add_argument('--fs', action='store_true', help="Also remove from the filesystem")
-    parser.add_argument('--data_dir', help="The root of where data is saved.")
-
-    args = parser.parse_args()
-
-    cred_params = read_config_stream(args.cred)
-    store = create_store_backend(**cred_params['jobs_db'])
-
-    cleaned = cleanup(args.work, store, purge_db=args.db, purge_fs=args.fs, data_dir=args.data_dir)
-    print("Results of this request:")
-    print_table(cleaned)
-
-
-if __name__ == "__main__":
-    main()
