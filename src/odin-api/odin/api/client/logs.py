@@ -6,8 +6,7 @@ import argparse
 import signal
 from typing import Optional
 import websockets
-from odin import LOGGER, APIField, APIStatus
-from odin.client import ODIN_URL, ODIN_PORT, ODIN_SCHEME, HttpClient
+from odin.api import ODIN_URL, ODIN_PORT, ODIN_SCHEME, HttpClient, ODIN_API_LOGGER, APIField, APIStatus
 
 
 async def request_logs(
@@ -35,9 +34,9 @@ async def request_logs(
         line = json.loads(await websocket.recv())
         while line[APIField.STATUS] != APIStatus.END:
             if line[APIField.STATUS] == APIStatus.ERROR:
-                LOGGER.error(line)
+                ODIN_API_LOGGER.error(line)
                 break
-            LOGGER.info(line[APIField.RESPONSE])
+            ODIN_API_LOGGER.info(line[APIField.RESPONSE])
             line = json.loads(await websocket.recv())
 
 

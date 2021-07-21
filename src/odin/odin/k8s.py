@@ -13,7 +13,8 @@ from typing import Dict, List, Union, Optional, Any, AsyncIterator, Type, Tuple
 import asyncio
 from kubernetes import client, config
 import requests_async as arequests
-from baseline.utils import listify, optional_params, import_user_module
+from eight_mile.utils import listify
+from baseline.utils import optional_params, import_user_module
 from odin import LOGGER
 from odin.store import Store
 

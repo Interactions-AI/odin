@@ -4,11 +4,9 @@ import json
 import asyncio
 import argparse
 import websockets
-from odin import LOGGER, APIField, APIStatus
-from odin.k8s import Event
-from odin.client import ODIN_URL, ODIN_PORT, ODIN_SCHEME, HttpClient
-from odin.utils.formatting import print_table
-
+from collections import namedtuple
+from odin.api import ODIN_URL, ODIN_PORT, ODIN_SCHEME, HttpClient, ODIN_API_LOGGER, APIField, APIStatus
+from odin.api.formatting import print_table, Event
 
 async def request_events(url: str, resource: str, namespace: str = 'default') -> None:
     """Get k8s events for some resource.
@@ -23,7 +21,7 @@ async def request_events(url: str, resource: str, namespace: str = 'default') ->
         )
         resp = json.loads(await websocket.recv())
         if resp[APIField.STATUS] == APIStatus.ERROR:
-            LOGGER.error(resp)
+            ODIN_API_LOGGER.error(resp)
             return
         if resp[APIField.STATUS] == APIStatus.OK:
             rows = [Event(**r) for r in resp[APIField.RESPONSE]]

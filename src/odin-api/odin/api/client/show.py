@@ -3,8 +3,7 @@ import argparse
 import asyncio
 import json
 import websockets
-from odin import LOGGER, APIField, APIStatus
-from odin.client import ODIN_URL, ODIN_PORT
+from odin.api import ODIN_URL, ODIN_PORT, ODIN_API_LOGGER, APIField, APIStatus
 
 
 async def request_pipeline_definitions(ws: str, pipeline: str) -> None:
@@ -14,14 +13,14 @@ async def request_pipeline_definitions(ws: str, pipeline: str) -> None:
 
         result = json.loads(await websocket.recv())
         if result[APIField.STATUS] == APIStatus.ERROR:
-            LOGGER.error(result)
+            ODIN_API_LOGGER.error(result)
             return
         if result[APIField.STATUS] == APIStatus.OK:
             for file_name, file_contents in result[APIField.RESPONSE].items():
-                LOGGER.info(file_name)
-                LOGGER.info("=" * 100)
-                LOGGER.info(file_contents)
-                LOGGER.info("")
+                ODIN_API_LOGGER.info(file_name)
+                ODIN_API_LOGGER.info("=" * 100)
+                ODIN_API_LOGGER.info(file_contents)
+                ODIN_API_LOGGER.info("")
 
 
 def main():

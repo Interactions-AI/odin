@@ -3,11 +3,16 @@
 import json
 import asyncio
 import argparse
-from typing import Set
+from typing import Set, List, Optional
 import websockets
-from odin import LOGGER, APIField, APIStatus
-from odin.status import show_status, Row, Pipeline
-from odin.client import ODIN_URL, ODIN_PORT, ODIN_SCHEME, HttpClient
+from collections import namedtuple
+from eight_mile.utils import listify, read_config_stream
+from baseline.utils import exporter, color, Colors
+
+from odin.api.formatting import show_status, Row, Pipeline
+from odin.api import ODIN_URL, ODIN_PORT, ODIN_SCHEME, HttpClient, ODIN_API_LOGGER, APIField, APIStatus
+
+
 
 
 async def request_status(ws: str, work: str, columns: Set[str], all_cols: bool = False) -> None:
@@ -22,7 +27,7 @@ async def request_status(ws: str, work: str, columns: Set[str], all_cols: bool =
 
         results = json.loads(await websocket.recv())
         if results[APIField.STATUS] == APIStatus.ERROR:
-            LOGGER.error(results)
+            ODIN_API_LOGGER.error(results)
             return
         if results[APIField.STATUS] == APIStatus.OK:
             results = results[APIField.RESPONSE]
