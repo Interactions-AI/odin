@@ -43,7 +43,7 @@ An easy way to create a job on the server is to use git to push it.  If you alre
 $ odin-push <job-name> <local-file>
 ```
 
-This will push the local file up to odin workspace for that job
+This will push the local file up to odin workspace for that job.  If you wish to push a new job, pass `-c` to `odin-push` to create the job
 
 
 #### Get a Job definition from the server
