@@ -6,9 +6,9 @@ import json
 import asyncio
 import argparse
 import websockets
-from odin.api import ODIN_API_LOGGER, ODIN_URL, ODIN_PORT, ODIN_SCHEME, HttpClient, APIField, APIStatus
-from odin.api.formatting import print_table, Cleaned
-from odin.api.auth import get_jwt_token
+from muninn import ODIN_API_LOGGER, ODIN_URL, ODIN_PORT, ODIN_SCHEME, HttpClient, APIField, APIStatus
+from muninn.formatting import print_table, Cleaned
+from muninn.auth import get_jwt_token
 
 
 async def request_cleanup(ws: str, work: str, purge_db: bool = False, purge_fs: bool = False):

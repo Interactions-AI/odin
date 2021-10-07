@@ -12,7 +12,6 @@ from mead.utils import convert_path
 from odin import LOGGER
 from odin.k8s import KubernetesTaskManager, TaskManager
 from odin.store import Store, create_store_backend
-from odin.api.formatting import print_table
 
 
 __all__ = []

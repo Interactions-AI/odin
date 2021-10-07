@@ -14,8 +14,9 @@ import git
 from datetime import datetime
 import logging
 from eight_mile.utils import read_yaml
-from odin import *
-from odin import (
+from odin.http.models import *
+from odin.http.orm import *
+from odin.http.utils import (
     _convert_to_path,
     set_repo_creds,
     _request_status,
@@ -45,9 +46,10 @@ ODIN_FS_ROOT = os.getenv('ODIN_FS_ROOT', '/data/pipelines')
 LOGGER = logging.getLogger('odin-http')
 TEMPLATE_SUFFIX = ".jinja2"
 
-def get_db_config() -> Dict:
+def get_db_config() -> dict:
     cred_params = {}
-    cred_params['backend'] = os.environ.get("ODIN_JOBS_BACKEND", "postgres")
+    cred_params['backend'] \
+        = os.environ.get("ODIN_JOBS_BACKEND", "postgres")
     cred_params['dbhost'] = os.environ.get("SQL_HOST", "127.0.0.1")
     cred_params['dbport'] = os.environ.get("DB_PORT", 5432)
     cred_params['user'] = os.environ.get("DB_USER")

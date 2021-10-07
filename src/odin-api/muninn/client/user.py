@@ -5,8 +5,8 @@ import json
 import signal
 import requests
 from prompt_toolkit import prompt
-from odin.api import ODIN_URL, ODIN_PORT, ODIN_SCHEME, ODIN_API_LOGGER
-from odin.api.auth import get_jwt_token
+from muninn import ODIN_URL, ODIN_PORT, ODIN_SCHEME, ODIN_API_LOGGER
+from muninn.auth import get_jwt_token
 
 
 def create_user_http(url: str, jwt_token: str, username: str, password: str, firstname: str, lastname: str) -> None:

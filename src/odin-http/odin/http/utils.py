@@ -4,7 +4,7 @@ import websockets
 import git
 import json
 import re
-from odin import *
+from odin.http.models import *
 
 LOGGER = logging.getLogger('odin-http')
 

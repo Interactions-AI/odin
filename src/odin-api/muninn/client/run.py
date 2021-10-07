@@ -8,8 +8,8 @@ import signal
 from typing import Dict
 import websockets
 from mead.utils import parse_and_merge_overrides
-from odin.api import ODIN_URL, ODIN_PORT, ODIN_SCHEME, HttpClient, ODIN_API_LOGGER, APIField, APIStatus
-from odin.api.auth import get_jwt_token
+from muninn import ODIN_URL, ODIN_PORT, ODIN_SCHEME, HttpClient, ODIN_API_LOGGER, APIField, APIStatus
+from muninn.auth import get_jwt_token
 
 
 async def schedule_pipeline(ws, work) -> None:

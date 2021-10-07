@@ -9,8 +9,8 @@ from collections import namedtuple
 from eight_mile.utils import listify, read_config_stream
 from baseline.utils import exporter, color, Colors
 
-from odin.api.formatting import show_status, Row, Pipeline
-from odin.api import ODIN_URL, ODIN_PORT, ODIN_SCHEME, HttpClient, ODIN_API_LOGGER, APIField, APIStatus
+from muninn.formatting import show_status, Row, Pipeline
+from muninn import ODIN_URL, ODIN_PORT, ODIN_SCHEME, HttpClient, ODIN_API_LOGGER, APIField, APIStatus
 
 
 

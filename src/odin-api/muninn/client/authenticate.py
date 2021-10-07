@@ -2,8 +2,8 @@
 import argparse
 from getpass import getuser
 import os
-from odin.api import ODIN_URL, ODIN_PORT, ODIN_SCHEME, ODIN_API_LOGGER
-from odin.api.auth import get_jwt_token
+from muninn import ODIN_URL, ODIN_PORT, ODIN_SCHEME, ODIN_API_LOGGER
+from muninn.auth import get_jwt_token
 
 
 def authenticate_user(url: str, token_path: str, username: str, password: str) -> None:
