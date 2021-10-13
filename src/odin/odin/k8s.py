@@ -550,7 +550,6 @@ def task_to_pod_spec(  # pylint: disable=too-many-locals
         command=listify(task.command),
         name=container_name if container_name else task.name,
         image=task.image,
-        security_context=sec_ctx,
         volume_mounts=volume_mounts if volume_mounts else None,
         image_pull_policy=task.pull_policy,
         resources=resources,
@@ -584,6 +583,7 @@ def task_to_pod_spec(  # pylint: disable=too-many-locals
     regcred = client.V1LocalObjectReference(name='registry')
     pod_spec = client.V1PodSpec(
         containers=[container],
+        security_context=sec_ctx,
         image_pull_secrets=[regcred],
         volumes=volumes if volumes else None,
         node_selector=selector,
