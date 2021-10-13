@@ -526,9 +526,14 @@ def task_to_pod_spec(  # pylint: disable=too-many-locals
         limits['cpu'] = task.cpu.limits
         requests['cpu'] = task.cpu.requests
     resources = client.V1ResourceRequirements(limits=limits, requests=requests)
-    sec_ctx = client.V1PodSecurityContext(fs_group=task.security_context.fs_group,
-            run_as_group=task.security_context.run_as_group,
-            run_as_user=task.security_context.run_as_user)
+    sec_ctx = client.V1PodSecurityContext()
+    if task.security_context is not None:
+        if task.security_context.fs_group is not None:
+            sec_ctx.fs_group = task.security_context.fs_group
+        if task.security_context.run_as_group is not None:
+            sec_ctx.run_as_group = task.security_context.run_as_group
+        if task.security_context.run_as_user is not None:
+            sec_ctx.run_as_user = task.security_context.run_as_user
     volume_mounts = []
     if task.mounts is not None:
         volume_mounts.extend(client.V1VolumeMount(mount_path=m.path, name=m.name) for m in task.mounts)
