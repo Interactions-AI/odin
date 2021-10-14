@@ -151,14 +151,14 @@ class Task:
         """
         mounts = dict_value.get('mount', dict_value.get('mounts'))
         mounts = [Volume(m['path'], m['name'], m['claim']) for m in listify(mounts)] if mounts is not None else None
-        cpu_req = dict_value.get('cpu', None)
-        cpu_req = Cpu(cpu_req.get('limits', None),
-                cpu_req.get('requests', None)) if cpu_req is not None else None
-        security_context = dict_value.get('security_context', None)
+        cpu_req = dict_value.get('cpu')
+        cpu_req = Cpu(cpu_req.get('limits'),
+                cpu_req.get('requests')) if cpu_req is not None else None
+        security_context = dict_value.get('security_context')
         security_context = SecurityContext(
-                security_context.get('fs_group', None),
-                security_context.get('run_as_group', None),
-                security_context.get('run_as_user', None)) if security_context is not None else None
+                security_context.get('fs_group'),
+                security_context.get('run_as_group'),
+                security_context.get('run_as_user')) if security_context is not None else None
         secrets = dict_value.get('secret', dict_value.get('secrets'))
         secrets = [populate_secret(s) for s in listify(secrets)] if secrets is not None else None
         config_maps = dict_value.get('config_map', dict_value.get('config_maps'))
