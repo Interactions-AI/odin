@@ -6,7 +6,7 @@ import argparse
 import signal
 from typing import Optional
 import websockets
-from odin.api import ODIN_URL, ODIN_PORT, ODIN_SCHEME, HttpClient, ODIN_API_LOGGER, APIField, APIStatus
+from muninn import ODIN_URL, ODIN_PORT, ODIN_SCHEME, HttpClient, ODIN_API_LOGGER, APIField, APIStatus
 
 
 async def request_logs(

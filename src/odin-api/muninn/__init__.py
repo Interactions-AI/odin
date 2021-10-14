@@ -2,8 +2,8 @@
 
 from typing import Dict
 from baseline.utils import get_console_logger
-from odin.api.auth import *
-from odin.api.version import *
+from muninn.auth import *
+from muninn.version import *
 
 ODIN_API_LOGGER = get_console_logger('odin', env_key='ODIN_LOG_LEVEL')
 ODIN_URL = os.environ.get('ODIN_URL', 'localhost')

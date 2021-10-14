@@ -4,8 +4,8 @@ import os
 import json
 import argparse
 from getpass import getuser
-from odin.api import ODIN_URL, ODIN_PORT, ODIN_SCHEME, HttpClient
-from odin.api.auth import get_jwt_token
+from muninn import ODIN_URL, ODIN_PORT, ODIN_SCHEME, HttpClient
+from muninn.auth import get_jwt_token
 
 
 def create_job_http(url: str, jwt_token: str, name: str) -> None:

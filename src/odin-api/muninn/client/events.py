@@ -5,8 +5,8 @@ import asyncio
 import argparse
 import websockets
 from collections import namedtuple
-from odin.api import ODIN_URL, ODIN_PORT, ODIN_SCHEME, HttpClient, ODIN_API_LOGGER, APIField, APIStatus
-from odin.api.formatting import print_table, Event
+from muninn import ODIN_URL, ODIN_PORT, ODIN_SCHEME, HttpClient, ODIN_API_LOGGER, APIField, APIStatus
+from muninn.formatting import print_table, Event
 
 async def request_events(url: str, resource: str, namespace: str = 'default') -> None:
     """Get k8s events for some resource.
