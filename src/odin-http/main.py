@@ -1,4 +1,3 @@
-from typing import Dict
 import glob
 import requests
 import time
@@ -10,11 +9,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from jinja2 import Template
 from kubernetes import client, config
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-import asyncio
-import websockets
 import os
 import git
-from datetime import date, datetime
+from datetime import datetime
 import logging
 from eight_mile.utils import read_yaml
 from odin.http.models import *
@@ -49,9 +46,10 @@ ODIN_FS_ROOT = os.getenv('ODIN_FS_ROOT', '/data/pipelines')
 LOGGER = logging.getLogger('odin-http')
 TEMPLATE_SUFFIX = ".jinja2"
 
-def get_db_config() -> Dict:
+def get_db_config() -> dict:
     cred_params = {}
-    cred_params['backend'] = os.environ.get("ODIN_JOBS_BACKEND", "postgres")
+    cred_params['backend'] \
+        = os.environ.get("ODIN_JOBS_BACKEND", "postgres")
     cred_params['dbhost'] = os.environ.get("SQL_HOST", "127.0.0.1")
     cred_params['dbport'] = os.environ.get("DB_PORT", 5432)
     cred_params['user'] = os.environ.get("DB_USER")
@@ -139,14 +137,6 @@ app.add_middleware(CORSMiddleware,
 
 dao = Dao(dbname=ODIN_DB, **get_db_config())
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth")
-
-ws_event_loop = asyncio.new_event_loop()
-
-
-def _run_ws(fn):
-    asyncio.set_event_loop(ws_event_loop)
-    return asyncio.get_event_loop().run_until_complete(fn)
-
 
 def _read_file(file_to_read):
     if not os.path.exists(file_to_read) or not os.path.isfile(file_to_read):
@@ -373,48 +363,45 @@ def get_node_info() -> str:
 
 
 @app.get("/pipelines")
-def get_pipelines(q: Optional[str] = None) -> PipelineResults:
-    loop = ws_event_loop
-    asyncio.set_event_loop(loop)
-
-    s = asyncio.get_event_loop().run_until_complete(_request_status(get_ws_url(), q))
+async def get_pipelines(q: Optional[str] = None) -> PipelineResults:
+    s = await _request_status(get_ws_url(), q)
     return s
 
 
 @app.post("/pipelines")
-def create_pipeline(pipe_def: PipelineWrapperDefinition, token: str=Depends(oauth2_scheme)) -> PipelineWrapperDefinition:
+async def create_pipeline(pipe_def: PipelineWrapperDefinition, token: str=Depends(oauth2_scheme)) -> PipelineWrapperDefinition:
     job = _convert_to_path(pipe_def.pipeline.job)
     _update_job_repo()
     if _is_template(job):
         job = _substitute_template(job, pipe_def.context or {})
-    pipe_id = _run_ws(_submit_job(get_ws_url(), job))
+    pipe_id = await _submit_job(get_ws_url(), job)
     p = PipelineDefinition(name=pipe_id, id=pipe_id, job=job)
     return PipelineWrapperDefinition(pipeline=p)
 
 
 @app.get("/pipelines/{pipe_id}")
-def get_pipeline(pipe_id: str) -> PipelineWrapperDefinition:
-    result = _run_ws(_request_status(get_ws_url(), pipe_id))
+async def get_pipeline(pipe_id: str) -> PipelineWrapperDefinition:
+    result = await _request_status(get_ws_url(), pipe_id)
     if result:
         return PipelineWrapperDefinition(pipeline=result.pipelines[0])
     raise Exception(f"No such pipeline {pipe_id}")
 
 
 @app.delete("/pipelines/{pipe_id}")
-def cleanup_pipeline(pipe_id: str, db: bool=False, fs: bool=False, token: str=Depends(oauth2_scheme)) -> PipelineCleanupResults:
-    cleanup_info = _run_ws(_request_cleanup(get_ws_url(), pipe_id, db, fs))
+async def cleanup_pipeline(pipe_id: str, db: bool=False, fs: bool=False, token: str=Depends(oauth2_scheme)) -> PipelineCleanupResults:
+    cleanup_info = await _request_cleanup(get_ws_url(), pipe_id, db, fs)
     return cleanup_info
 
 
 @app.get("/resources/{resource_id}/events")
-def get_events(resource_id) -> EventResults:
-    event_info = _run_ws(_request_events(get_ws_url(), resource_id))
+async def get_events(resource_id) -> EventResults:
+    event_info = await _request_events(get_ws_url(), resource_id)
     return event_info
 
 
 @app.get("/resources/{resource_id}/data")
-def get_data(resource_id):
-    data_info = _run_ws(_request_data(get_ws_url(), resource_id))
+async def get_data(resource_id):
+    data_info = await _request_data(get_ws_url(), resource_id)
     return data_info
 
 @app.get("/jobs")

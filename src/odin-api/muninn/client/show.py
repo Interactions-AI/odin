@@ -3,7 +3,7 @@ import argparse
 import asyncio
 import json
 import websockets
-from odin.api import ODIN_URL, ODIN_PORT, ODIN_API_LOGGER, APIField, APIStatus
+from muninn import ODIN_URL, ODIN_PORT, ODIN_API_LOGGER, APIField, APIStatus
 
 
 async def request_pipeline_definitions(ws: str, pipeline: str) -> None:
