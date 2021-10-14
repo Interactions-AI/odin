@@ -40,6 +40,8 @@ Handle = Union[str, 'Job']
 Volume = namedtuple('Volume', 'path name claim')
 Status = namedtuple('Status', 'status_type message')
 Secret = namedtuple('Secret', 'path name sub_path mode')
+Cpu = namedtuple('Cpu', 'limits requests')
+SecurityContext = namedtuple('SecurityContext', 'fs_group run_as_group run_as_user')
 # Because not python3.7, These defaults are for the rightmost argument of Secret
 DEFAULT_MODE = 0o644
 
@@ -95,7 +97,9 @@ class Task:
         mounts: Optional[List[Volume]] = None,
         secrets: Optional[List[Secret]] = None,
         config_maps: Optional[List[ConfigMap]] = None,
+        cpu: Optional[Cpu] = None,
         num_gpus: int = None,
+        security_context: Optional[SecurityContext] = None,
         pull_policy: str = 'IfNotPresent',
         node_selector: Optional[Dict[str, str]] = None,
         resource_type: str = "Pod",
@@ -112,6 +116,7 @@ class Task:
         :param mounts: Optional `Volume`s to mount
         :param secrets: Optional `Secret`s to mount
         :param config_maps: Optional `CongfigMap`s to mount
+        :param cpu: Optional cpu resource limits and requests
         :param num_gpus: The number of GPUs requested for this task
         :param pull_policy: pull policy, defaults to `IfNotPresent`
         :param node_selector: This is a list of labels that can be used to select a specific node
@@ -127,7 +132,9 @@ class Task:
         self.mounts = mounts
         self.secrets = secrets
         self.config_maps = config_maps
+        self.cpu = cpu
         self.num_gpus = num_gpus
+        self.security_context = security_context
         self.pull_policy = pull_policy
         self.node_selector = node_selector
         self.resource_type = resource_type
@@ -144,6 +151,14 @@ class Task:
         """
         mounts = dict_value.get('mount', dict_value.get('mounts'))
         mounts = [Volume(m['path'], m['name'], m['claim']) for m in listify(mounts)] if mounts is not None else None
+        cpu_req = dict_value.get('cpu')
+        cpu_req = Cpu(cpu_req.get('limits'),
+                cpu_req.get('requests')) if cpu_req is not None else None
+        security_context = dict_value.get('security_context')
+        security_context = SecurityContext(
+                security_context.get('fs_group'),
+                security_context.get('run_as_group'),
+                security_context.get('run_as_user')) if security_context is not None else None
         secrets = dict_value.get('secret', dict_value.get('secrets'))
         secrets = [populate_secret(s) for s in listify(secrets)] if secrets is not None else None
         config_maps = dict_value.get('config_map', dict_value.get('config_maps'))
@@ -157,7 +172,9 @@ class Task:
             mounts,
             secrets,
             config_maps,
+            cpu_req,
             dict_value.get('num_gpus', 0),
+            security_context,
             dict_value.get('pull_policy', 'IfNotPresent'),
             dict_value.get('node_selector'),
             dict_value.get('resource_type', "Pod"),
@@ -502,9 +519,21 @@ def task_to_pod_spec(  # pylint: disable=too-many-locals
     :rtype: client.V1PodSpec
     """
     limits = {}
+    requests = {}
     if task.num_gpus is not None:
         limits['nvidia.com/gpu'] = task.num_gpus
-    resources = client.V1ResourceRequirements(limits=limits)
+    if task.cpu is not None:
+        limits['cpu'] = task.cpu.limits
+        requests['cpu'] = task.cpu.requests
+    resources = client.V1ResourceRequirements(limits=limits, requests=requests)
+    sec_ctx = client.V1PodSecurityContext()
+    if task.security_context is not None:
+        if task.security_context.fs_group is not None:
+            sec_ctx.fs_group = task.security_context.fs_group
+        if task.security_context.run_as_group is not None:
+            sec_ctx.run_as_group = task.security_context.run_as_group
+        if task.security_context.run_as_user is not None:
+            sec_ctx.run_as_user = task.security_context.run_as_user
     volume_mounts = []
     if task.mounts is not None:
         volume_mounts.extend(client.V1VolumeMount(mount_path=m.path, name=m.name) for m in task.mounts)
@@ -554,6 +583,7 @@ def task_to_pod_spec(  # pylint: disable=too-many-locals
     regcred = client.V1LocalObjectReference(name='registry')
     pod_spec = client.V1PodSpec(
         containers=[container],
+        security_context=sec_ctx,
         image_pull_secrets=[regcred],
         volumes=volumes if volumes else None,
         node_selector=selector,
