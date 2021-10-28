@@ -24,14 +24,21 @@ This will tell the scheduler to execute the dependency task prior to the depende
   - `claim` - The PVC name for our mount
   - `name` - A name for this mount
   - `path` - The virtual path we see from inside the container (often set to `/data`)
-  - `secrets` - An optional list of secrets if required for this task
-  - `config_maps` - An optional list of config_maps if required for this task
-  - `num_gpus` - For a single worker image, the number of GPUs required.  This should be ignored for multi-worker jobs, as these use `num_workers`
-  - `pull_policy` - A string policy for the container, commonly `IfNotPresent` or `Always`.
-  - `node_selector` - An optional dictionary of key-values used to specify on which node we should execute.
-  - `resource_type` - The top of resource we wish to execute.  This defaults to `Pod`, but other valid values include `TFJob`, `PyTorchJob`, `ElasticJob`, `MPIJob` and `Job`.  For multi-worker, multi-GPU configurations this is usually one of the `*Job` resources, otherwise `Pod` is most common
-  - `inputs` - An optional way to enumerate the inputs expected for this task
-  - `outputs` - An otpional way to enumerate the outputs expected for this task
+- `secrets` - An optional list of secrets if required for this task
+- `config_maps` - An optional list of config_maps if required for this task
+- `num_gpus` - For a single worker image, the number of GPUs required.  This should be ignored for multi-worker jobs, as these use `num_workers`
+- `pull_policy` - A string policy for the container, commonly `IfNotPresent` or `Always`.
+- `node_selector` - An optional dictionary of key-values used to specify on which node we should execute.
+- `resource_type` - The top of resource we wish to execute.  This defaults to `Pod`, but other valid values include `TFJob`, `PyTorchJob`, `ElasticJob`, `MPIJob` and `Job`.  For multi-worker, multi-GPU configurations this is usually one of the `*Job` resources, otherwise `Pod` is most common
+- `inputs` - An optional way to enumerate the inputs expected for this task
+- `outputs` - An otpional way to enumerate the outputs expected for this task
+- `cpu` - Optionally set limit and requests for cpu resource
+  - `limits` - limit of cpu resource. A pod may *not* use more than `limits`
+  - `requests` - requested cpu resource. A pod is guaranteed `requests` amount of cpu. See more at [kubernetes docs](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/)
+- `security_context` - Set security context for pod.
+  - `run_as_user` - Set user id that runs command in the pod.
+  - `run_as_group` - Set group id that runs command in the pod.
+  - `fs_group` - Volumes that support ownership management are modified to be owned and writable by the GID specified in `fs_group`. See more at [kubernetes docs](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/)
 
 ## Processing variables
 
