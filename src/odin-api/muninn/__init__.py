@@ -208,3 +208,4 @@ class HttpClient:
         """
         response = requests.get(f'{self.url}/v1/app')
         return response.json()
+

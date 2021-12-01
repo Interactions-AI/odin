@@ -22,6 +22,7 @@ from odin.http.utils import (
     _request_status,
     _submit_job,
     _request_cleanup,
+    _request_logs,
     _request_data,
     _request_events,
     _validate_filename,
@@ -403,6 +404,12 @@ async def get_events(resource_id) -> EventResults:
 async def get_data(resource_id):
     data_info = await _request_data(get_ws_url(), resource_id)
     return data_info
+
+@app.get("/resources/{resource_id}/logs")
+async def get_data(resource_id):
+    data_info = await _request_logs(get_ws_url(), resource_id)
+    return data_info
+
 
 @app.get("/jobs")
 def get_jobs(q: Optional[str] = '*') -> JobResults:
