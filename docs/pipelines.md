@@ -24,14 +24,21 @@ This will tell the scheduler to execute the dependency task prior to the depende
   - `claim` - The PVC name for our mount
   - `name` - A name for this mount
   - `path` - The virtual path we see from inside the container (often set to `/data`)
-  - `secrets` - An optional list of secrets if required for this task
-  - `config_maps` - An optional list of config_maps if required for this task
-  - `num_gpus` - For a single worker image, the number of GPUs required.  This should be ignored for multi-worker jobs, as these use `num_workers`
-  - `pull_policy` - A string policy for the container, commonly `IfNotPresent` or `Always`.
-  - `node_selector` - An optional dictionary of key-values used to specify on which node we should execute.
-  - `resource_type` - The top of resource we wish to execute.  This defaults to `Pod`, but other valid values include `TFJob`, `PyTorchJob`, `ElasticJob`, `MPIJob` and `Job`.  For multi-worker, multi-GPU configurations this is usually one of the `*Job` resources, otherwise `Pod` is most common
-  - `inputs` - An optional way to enumerate the inputs expected for this task
-  - `outputs` - An otpional way to enumerate the outputs expected for this task
+- `secrets` - An optional list of secrets if required for this task
+- `config_maps` - An optional list of config_maps if required for this task
+- `num_gpus` - For a single worker image, the number of GPUs required.  This should be ignored for multi-worker jobs, as these use `num_workers`
+- `pull_policy` - A string policy for the container, commonly `IfNotPresent` or `Always`.
+- `node_selector` - An optional dictionary of key-values used to specify on which node we should execute.
+- `resource_type` - The top of resource we wish to execute.  This defaults to `Pod`, but other valid values include `TFJob`, `PyTorchJob`, `ElasticJob`, `MPIJob` and `Job`.  For multi-worker, multi-GPU configurations this is usually one of the `*Job` resources, otherwise `Pod` is most common
+- `inputs` - An optional way to enumerate the inputs expected for this task
+- `outputs` - An otpional way to enumerate the outputs expected for this task
+- `cpu` - Optionally set limit and requests for cpu resource
+  - `limits` - limit of cpu resource. A pod may *not* use more than `limits`
+  - `requests` - requested cpu resource. A pod is guaranteed `requests` amount of cpu. See more at [kubernetes docs](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/)
+- `security_context` - Set security context for pod.
+  - `run_as_user` - Set user id that runs command in the pod.
+  - `run_as_group` - Set group id that runs command in the pod.
+  - `fs_group` - Volumes that support ownership management are modified to be owned and writable by the GID specified in `fs_group`. See more at [kubernetes docs](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/)
 
 ## Processing variables
 
@@ -70,3 +77,47 @@ The `main.yml` references the PVC where the pipelines exist in the `mount` secti
 ```
 
 For this particular command, `--basedir` also specifies a place where logs and checkpoints are stored, and here the descriptor uses the processor variables to specify the output workspace location.
+
+## Templating
+
+The HTTP server supports server side template rendering of pipelines using [Jinja2](https://jinja2docs.readthedocs.io/en/stable/).  Templating can be used to customize a pipeline at runtime without having to change any configuration files.  Any files in a pipeline directory that end in a `.jinja2` extension will be substitute when a pipeline run is launched, and the substituted pipeline will be created as a sub-directory in the render area (`rendered` by default). This sub-directory is not git-backed and the jobs rendered pipelines can be cleaned up afterward by using a `CronJob`.
+
+To customize a `main.yml`, rename it to `main.yml.jinja2` and place the templating code inside the file. In the example below, we will use it to set an image name and a deep-learning backend
+
+```yaml
+
+{% if version is not defined or not version  %}
+{%   set version = 'gpu' %}
+{% endif %}
+name: sst2
+tasks:
+- args:
+  - --basedir
+  - ${RUN_PATH}/${TASK_ID}
+  - --config
+  - ${WORK_PATH}/sst2.yml
+  - --logging
+  - ${ROOT_PATH}/logging.json
+  - --settings
+  - /data/mead-settings.json
+  - --reporting
+  - xpctl
+  - --xpctl:label
+  - ${TASK_ID}
+  - --datasets
+  - ${ROOT_PATH}/datasets.yml
+  - --embeddings
+  - ${ROOT_PATH}/embeddings.yml
+  - --backend
+  - {{ backend|default('pytorch') }}
+  command: mead-train
+  depends: null
+  image: {{ "meadml/mead2-" ~ backend|default('pytorch') ~ "-" ~ version ~ ":latest" }}
+
+```
+To set these values from the command line client:
+
+```
+odin-run sst2 --x:backend tf
+```
+

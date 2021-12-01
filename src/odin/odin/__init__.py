@@ -12,24 +12,6 @@ LOGGER = get_console_logger('odin', env_key='ODIN_LOG_LEVEL')
 Metrics = Dict[str, float]
 Path = str
 
-
-class APIField:
-    """Keys that we use when communicating between server and clients."""
-
-    STATUS = 'status'
-    RESPONSE = 'response'
-    COMMAND = 'command'
-    REQUEST = 'request'
-
-
-class APIStatus:
-    """Status codes used between the server and client."""
-
-    OK = 'OK'
-    ERROR = 'ERROR'
-    END = 'END'
-
-
 ODIN_LOGO = r"""  ____  _____ _____ _   _
  / __ \|  __ \_   _| \ | |
 | |  | | |  | || | |  \| |

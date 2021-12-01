@@ -5,8 +5,7 @@ import asyncio
 from datetime import datetime
 import json
 import websockets
-from odin import LOGGER, APIField, APIStatus
-from odin.client import ODIN_URL, ODIN_PORT, ODIN_SCHEME
+from muninn import ODIN_URL, ODIN_PORT, ODIN_SCHEME, ODIN_API_LOGGER, APIField, APIStatus
 
 
 async def ping(uri: str, message: str) -> None:
@@ -20,9 +19,9 @@ async def ping(uri: str, message: str) -> None:
         await websocket.send(json.dumps({APIField.COMMAND: 'PING', APIField.REQUEST: message}))
         resp = json.loads(await websocket.recv())
         if resp[APIField.STATUS] == APIStatus.ERROR:
-            LOGGER.error(resp)
+            ODIN_API_LOGGER.error(resp)
             raise RuntimeError(resp)
-        LOGGER.info(resp[APIField.RESPONSE])
+        ODIN_API_LOGGER.info(resp[APIField.RESPONSE])
 
 
 def main():

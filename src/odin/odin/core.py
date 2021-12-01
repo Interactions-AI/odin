@@ -219,7 +219,7 @@ def _get_child_name(parent_name: str, name: str) -> str:
 
 
 def read_pipeline_config(  # pylint: disable=too-many-locals
-    work_dir: str, root_dir: str, data_dir: Optional[str] = None, main_file: Optional[str] = None
+        work_dir: str, root_dir: str, data_dir: Optional[str] = None, main_file: Optional[str] = None, pipeline_id: Optional[str] = None
 ) -> Tuple[Dict, List[Dict]]:
     """Read in the pipeline configuration from a directory
 
@@ -248,7 +248,11 @@ def read_pipeline_config(  # pylint: disable=too-many-locals
     basename = flow.get('name', 'flow')
     if not validate_pipeline_name(basename):
         raise ValueError(f"Pipeline name must match {K8S_NAME.pattern}, got {basename}")
-    my_id = _generate_name(basename)
+    if pipeline_id is None:
+        my_id = _generate_name(basename)
+    else:
+        my_id = f"{basename}-{pipeline_id}"
+
     tasks = flow['tasks']
     child_job_ids = [_get_child_name(my_id, task['name']) for task in tasks]
     data_dir = data_dir if data_dir is not None else work_dir

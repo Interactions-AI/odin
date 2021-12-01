@@ -7,7 +7,7 @@ import logging
 from hashlib import sha1
 from itertools import chain
 from typing import Dict, List, Optional, Union, AsyncIterator, Any
-from baseline.utils import listify
+from eight_mile.utils import listify
 from mead.utils import order_json
 from odin.core import create_graph, is_reference, parse_reference, extract_outputs, _get_child_name
 from odin.dag import topo_sort_parallel, dot_graph, CycleError

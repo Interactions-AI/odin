@@ -5,9 +5,8 @@ import json
 import signal
 import requests
 from prompt_toolkit import prompt
-from odin import LOGGER
-from odin.client import ODIN_URL, ODIN_PORT, ODIN_SCHEME
-from odin.utils.auth import get_jwt_token
+from muninn import ODIN_URL, ODIN_PORT, ODIN_SCHEME, ODIN_API_LOGGER
+from muninn.auth import get_jwt_token
 
 
 def create_user_http(url: str, jwt_token: str, username: str, password: str, firstname: str, lastname: str) -> None:
@@ -36,20 +35,20 @@ def create_user_http(url: str, jwt_token: str, username: str, password: str, fir
             if response.status_code != 200:
                 raise Exception(f"Failed to create user: {username}")
             results = response.json()
-            LOGGER.info("Created new user")
-            LOGGER.info(json.dumps(results))
+            ODIN_API_LOGGER.info("Created new user")
+            ODIN_API_LOGGER.info(json.dumps(results))
             return
 
         results = response.json()
-        LOGGER.info("Found existing user")
-        LOGGER.info(json.dumps(results))
+        ODIN_API_LOGGER.info("Found existing user")
+        ODIN_API_LOGGER.info(json.dumps(results))
     except Exception as ex:
-        LOGGER.error(ex)
+        ODIN_API_LOGGER.error(ex)
         return
 
     response = requests.put(f'{url}/v1/users/{username}', json=user, headers=headers)
     results = response.json()
-    LOGGER.info(json.dumps(results))
+    ODIN_API_LOGGER.info(json.dumps(results))
 
 
 def main():

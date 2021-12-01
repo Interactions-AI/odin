@@ -29,5 +29,17 @@ jobs:
               user: __token__
               password: ${{ secrets.pypi_password }}
               packages_dir: src/odin/dist
+        - name: Build Odin-API Package
+          run: |
+              cd src/odin-api
+              python setup.py sdist bdist_wheel
+              cd ../..
+        - name: Publish Odin-API Package
+          if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
+          uses: pypa/gh-action-pypi-publish@master
+          with:
+              user: __token__
+              password: ${{ secrets.pypi_password }}
+              packages_dir: src/odin-api/dist
 
 

@@ -4,8 +4,8 @@ import os
 import json
 import argparse
 from getpass import getuser
-from odin.client import ODIN_URL, ODIN_PORT, ODIN_SCHEME, HttpClient
-from odin.utils.auth import get_jwt_token
+from muninn import ODIN_URL, ODIN_PORT, ODIN_SCHEME, HttpClient
+from muninn.auth import get_jwt_token
 from baseline.utils import color, Colors
 
 

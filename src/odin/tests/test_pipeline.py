@@ -153,3 +153,115 @@ def test_pipeline():
             print(store.get(tasks))
     finally:
         loop.close()
+
+YAML_CONFIG = """
+name: test-job
+tasks:
+
+- name: train-sst2-2
+  image: mead-ml/mead-gpu:1.3.0
+  command: mead-train
+  args:
+   - "--datasets"
+   - "${ROOT_PATH}/datasets.yml"
+   - "--config"
+   - "${WORK_PATH}/sst2.json"
+   - "--reporting"
+   - "xpctl"
+   - "--xpctl:label"
+   - "${TASK_ID}"
+  mount:
+     name: data
+     path: "/data"
+     claim: "myclaim"
+  security_context:
+     fs_group: 1152
+  cpu:
+     limits: 4.5
+     requests: 1.0
+  num_gpus: 1
+  depends: [train-sst2-1]
+
+- name: hello-python
+  image: python:3.6.4-jessie
+  command: python3
+  args:
+   - "-c"
+   - "print('hello ${TASK_ID}')"
+
+- name: train-sst2-1
+  image: mead-ml/mead-gpu:latest
+  command: mead-train
+  args:
+   - "--datasets"
+   - "${ROOT_PATH}/datasets.yml"
+   - "--config"
+   - "${WORK_PATH}/sst2.json"
+   - "--reporting"
+   - "xpctl"
+   - "--xpctl:label"
+   - "${TASK_ID}"
+  mount:
+     name: data
+     path: "/data"
+     claim: "myclaim"
+  num_gpus: 1
+  depends: [hello-python]
+
+- name: goodbye-python
+  image: python:3.6.4-jessie
+  command: python3
+  depends: [train-sst2-1, train-sst2-2]
+  args:
+   - "-c"
+   - "print('goodbye cruel world')"
+"""
+
+def test_scheduling_order1():
+    graph = create_graph(yaml.load(YAML_CONFIG, Loader=yaml.FullLoader)['tasks'])
+    sequence = topo_sort(graph)
+    assert sequence == [1, 2, 0, 3]
+
+
+def test_substitution1():
+    no_sub = yaml.load(YAML_CONFIG, Loader=yaml.FullLoader)['tasks']
+    context, tasks = read_pipeline_config('RANDOM_WORK', 'RANDOM_ROOT', 'RANDOM_DATA', YAML_CONFIG)
+
+    pipe_id = context['PIPE_ID']
+    task_name = no_sub[0]['name']
+    assert f'{pipe_id}--{task_name}' == context['TASK_IDS'][0]
+    assert context['TASK_IDS'] == [task['name'] for task in tasks]
+    assert context['ROOT_PATH'] == 'RANDOM_ROOT'
+    assert context['WORK_PATH'] == 'RANDOM_WORK'
+
+    assert tasks[0]['args'][1] == "RANDOM_ROOT/datasets.yml"
+    assert tasks[0]['args'][:-1] == tasks[2]['args'][:-1]
+    assert tasks[0]['args'][-1] != tasks[2]['args'][-1]
+
+    assert tasks[1]['args'][-1] == "print('hello {}')".format(context['TASK_IDS'][1])
+
+
+def test_pipeline1():
+    import asyncio
+
+    context, tasks = read_pipeline_config('RANDOM_WORK', 'RANDOM_ROOT', 'RANDOM_DATA', YAML_CONFIG)
+    store = MemoryStore()
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(asyncio.new_event_loop())
+    #  loop = asyncio.get_event_loop()
+
+    try:
+        p = Executor(store, MockTaskManager())
+        pipe_id = context['PIPE_ID']
+
+        async def run1():
+            async for _ in p.run(pipe_id, 'jid', '1', tasks):
+                pass
+
+        loop.run_until_complete(run1())
+        for tasks in context['TASK_IDS']:
+            print(store.get(tasks))
+    finally:
+        loop.close()
+
+
