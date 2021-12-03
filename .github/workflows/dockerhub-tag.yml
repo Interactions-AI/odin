@@ -2,8 +2,8 @@ name: Publish to DockerHub
 
 on:
     push:
-        branches:
-        - 'develop'
+        tags:
+        - '*'
 
 jobs:
     build:
@@ -21,7 +21,7 @@ jobs:
               password: ${{ secrets.DOCKER_PASSWORD }}
               repository: interactions/odin-ml
               path: src/odin
-              tags: dev
+              tags: latest 
 
         - name: Build & Push odin-ml-http image
           uses: docker/build-push-action@v1
@@ -30,7 +30,7 @@ jobs:
               password: ${{ secrets.DOCKER_PASSWORD }}
               repository: interactions/odin-ml-http
               path: src/odin-http
-              tags: dev
+              tags: latest
 
         - name: Build & Push midgard Docker image with CUDA 10.1
           uses: docker/build-push-action@v1
@@ -40,5 +40,5 @@ jobs:
               repository: interactions/midgard
               dockerfile: src/midgard/Dockerfile.cuda101
               path: src/midgard
-              tags: dev
+              tags: latest 
 
