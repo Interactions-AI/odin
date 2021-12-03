@@ -705,7 +705,8 @@ class KubernetesTaskManager(TaskManager):
         pods = self.find_resource_names(name)
         if len(pods) > 1:
             prefix = "\n".join(chain([f"Found {len(pods)} pods,"], pods, [f"using pod/{pods[0]}"]))
-        pod = pods[0] if pods else name
+        if not pods:
+            pods.append(name)
 
         # Here we fill a dict with the extra parameters for our call to `read_namespaced_pod_log`. This is
         # because to get the default behavior you need to not pass a value, passing a value of `None` isn't
@@ -717,11 +718,13 @@ class KubernetesTaskManager(TaskManager):
             # Here the parameter is in snake_case because we are interacting with k8s through the python client.
             args['tail_lines'] = lines
 
-        logs = api.read_namespaced_pod_log(pod, namespace=self.namespace, **args)
+        all_logs = [prefix] if prefix else []
+        for pod in pods:
+            logs = api.read_namespaced_pod_log(pod, namespace=self.namespace, **args)
+            all_logs.append(f"{'='*16}\n{pod}\n{'-'*16}\n{logs}")
+        return '\n'.join(all_logs)
 
-        return f"{prefix}\n{logs}" if prefix else logs
-
-    def _find_resource(self, task: str) -> Tuple[str, str]:
+    def _find_resources(self, task: str) -> List[Tuple[str, str]]:
 
         """Figure out what type of resource this is.
 
@@ -736,19 +739,23 @@ class KubernetesTaskManager(TaskManager):
             prefix, resource = task.split('/')
             prefix = prefix.lower()
             if prefix in ('svc', 'service'):
-                return 'svc', resource
+                return [('svc', resource),]
             if prefix in ('deploy', 'deployment'):
-                return 'deploy', resource
+                return [('deploy', resource),]
 
         try:
             job_entry = self.store.get(task)
+            if job_entry['parent'] is None:
+                sub_tasks = job_entry['waiting'] + job_entry['executing'] + job_entry['executed']
+                task_entries = [self.store.get(s) for s in sub_tasks]
+                return [(sub.get(Store.RESOURCE_TYPE, 'Pod'), sub[Store.RESOURCE_ID]) for sub in task_entries]
         except KeyError:
             # If the resource is missing from the job db we assume it some thing the user
             # figured out like the `${PyTorchJob_ID}-worker-0`. This lets us get logs
             # from arbitrary resources on the cluster
-            return 'Pod', task
+            return [('Pod', task),]
 
-        return job_entry.get(Store.RESOURCE_TYPE, 'Pod'), job_entry[Store.RESOURCE_ID]
+        return [(job_entry.get(Store.RESOURCE_TYPE, 'Pod'), job_entry[Store.RESOURCE_ID]),]
 
     def find_resource_names(self, task: str) -> List[str]:
         """Find possible pods that we could get logs from.
@@ -762,9 +769,13 @@ class KubernetesTaskManager(TaskManager):
         :param task: The thing we want logs from
         :returns: The list of pods that it makes sense to get logs from.
         """
-        resource_type, resource = self._find_resource(task)
-        pods = self.handler_for(resource_type).get_pods(resource)
-        return [p.metadata.name for p in pods]
+        resources = self._find_resources(task)
+        all_pods = []
+        for (resource_type, resource) in resources:
+            pods = self.handler_for(resource_type).get_pods(resource)
+            for p in pods:
+                all_pods.append(p.metadata.name)
+        return all_pods
 
     def handler_for(self, resource_type: str = "Pod") -> object:
         """Get the right API based on the `resource_type`
@@ -906,16 +917,14 @@ class KubernetesTaskManager(TaskManager):
             config.load_incluster_config()
         except config.config_exception.ConfigException:
             config.load_kube_config()
-        resource_type, name = self._find_resource(name)
 
-        handler = self.handler_for(resource_type.lower())
-        return handler.get_events(name, self.store)
-
-        # try:
-        #    job_entry = store.get(name)
-        #    resource = job_entry[Store.RESOURCE_ID]
-        # except KeyError:
-        #    pass
+        all_events = []
+        resources = self._find_resources(name)
+        for (resource_type, name) in resources:
+            handler = self.handler_for(resource_type.lower())
+            events = handler.get_events(name, self.store)
+            all_events += events
+        return all_events
 
     def get_resource_type(self, handle: Handle) -> str:
         """What type of resource is associated with this job

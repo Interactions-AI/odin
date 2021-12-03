@@ -44,33 +44,9 @@ def log_all_children_http(url, resource, namespace):
     client = HttpClient(url=url)
     try:
         print(client.request_logs(resource, namespace))
-    except:
-        head = find_head(resource)
-        data = client.request_data(head)
-        for job in data['jobs']['jobs']:
-            rid = client.request_data(job)['jobs']['resource_id']
-            print('================')
-            print(rid)
-            print('----------------')
-            try:
-                logs = client.request_logs(rid, namespace)
-                print(logs)
-            except:
-                try:
-                    # If everything still fails, it could be a Kubeflow job child
-                    logs = client.request_logs(f'{rid}-master-0', namespace)
-                    print(logs)
-                except:
-                    print('Failed to get log')
-
-
-def find_head(resource):
-    # Lets try and find this resource
-    head = resource.split('j--')[0]
-    if not head.endswith('j'):
-        head += 'j'
-    return head
-
+    except Exception as e:
+        print(e)
+        print('Failed to get log')
 
 def main():
     """Async websocket client to get logs from k8s pods."""

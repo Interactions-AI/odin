@@ -177,6 +177,31 @@ async def _request_data(ws: str, resource: str, namespace: str = 'default') -> N
         if resp[APIField.STATUS] == APIStatus.OK:
             return resp[APIField.RESPONSE]
 
+
+async def _request_logs(ws: str, resource: str, namespace: str = 'default') -> None:
+    """Get data for resource as contained in `jobs_db`
+
+    :param uri: The location of the server
+    :param pod: The name of the resource you are asking about.
+    :param namespace: The namespace of the resource you are asking about.
+    :param kind: The kind of resource you are asking about.
+    """
+    async with websockets.connect(ws) as websocket:
+        await websocket.send(
+            json.dumps(
+                {
+                    APIField.COMMAND: 'LOGS',
+                    APIField.REQUEST: {'resource': resource, 'namespace': namespace},
+                }
+            )
+        )
+        resp = json.loads(await websocket.recv())
+        if resp[APIField.STATUS] == APIStatus.ERROR:
+            LOGGER.error(resp)
+            return
+        if resp[APIField.STATUS] == APIStatus.OK:
+            return resp[APIField.RESPONSE]
+
 def _validate_filename(filename):
     matcher = re.compile(r'^[^<>:;,?"*|/]+$')
     if not matcher.match(filename):
