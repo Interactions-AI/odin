@@ -30,7 +30,7 @@ setup(
         'kubernetes',
         'shortid',
         'GitPython',
-        'pymongo',
+        'pymongo <= 3.12.0',
         'SQLAlchemy',
         'psycopg2-binary',
         'ruamel.yaml',
