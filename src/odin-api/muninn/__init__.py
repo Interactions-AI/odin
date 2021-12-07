@@ -114,6 +114,18 @@ class HttpClient:
         results = response.json()
         return results
 
+    def request_logs(self, resource: str) -> Dict:
+        """Get events for a resource over HTTP
+
+        :param url: The base URL
+        :param resource: The resource ID
+        """
+        response = requests.get(f'{self.url}/v1/resources/{resource}/logs')
+        if response.status_code == 401:
+            raise ValueError("Invalid login")
+        results = response.json()
+        return results
+
     def request_data(self, resource: str) -> Dict:
         """Get data for a resource over HTTP
 
@@ -183,23 +195,6 @@ class HttpClient:
         results = response.json()['users']
         return results
 
-    def request_logs(self, pod: str, namespace='default', **kwargs) -> str:
-        """This function really shouldnt be provided here -- forget you saw this
-
-        Using the logs directly from k8s isnt desirable, we should add this to the HTTP tier, but if you really
-        need it, this function should get results back
-        :param work:
-        :return:
-        """
-        from kubernetes import client, config
-
-        try:
-            config.load_incluster_config()
-        except config.config_exception.ConfigException:
-            config.load_kube_config()
-        api = client.CoreV1Api()
-        logs = api.read_namespaced_pod_log(pod, namespace=namespace, **kwargs)
-        return logs
 
     def app_info(self):
         """Get information about run configuration

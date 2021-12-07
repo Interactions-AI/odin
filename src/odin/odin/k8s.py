@@ -745,11 +745,12 @@ class KubernetesTaskManager(TaskManager):
 
         try:
             job_entry = self.store.get(task)
-            if job_entry['parent'] is None:
+            if job_entry.get('parent') is None:
                 sub_tasks = job_entry['waiting'] + job_entry['executing'] + job_entry['executed']
                 task_entries = [self.store.get(s) for s in sub_tasks]
                 return [(sub.get(Store.RESOURCE_TYPE, 'Pod'), sub[Store.RESOURCE_ID]) for sub in task_entries]
         except KeyError:
+
             # If the resource is missing from the job db we assume it some thing the user
             # figured out like the `${PyTorchJob_ID}-worker-0`. This lets us get logs
             # from arbitrary resources on the cluster
