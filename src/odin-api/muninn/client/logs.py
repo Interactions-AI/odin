@@ -40,10 +40,10 @@ async def request_logs(
             line = json.loads(await websocket.recv())
 
 
-def log_all_children_http(url, resource, namespace):
+def log_all_children_http(url, resource):
     client = HttpClient(url=url)
     try:
-        print(client.request_logs(resource, namespace))
+        print(client.request_logs(resource))
     except Exception as e:
         print(e)
         print('Failed to get log')
@@ -76,7 +76,7 @@ def main():
     endpoint = f'{args.scheme}://{args.host}:{args.port}'
 
     if args.scheme.startswith('http'):
-        log_all_children_http(endpoint, args.resource, args.namespace)
+        log_all_children_http(endpoint, args.resource)
 
     else:
 
