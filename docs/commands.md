@@ -1,6 +1,6 @@
 ## Odin Commands 
 
-Most Odin commands use the [REST API](api.md) to communicate.  A few use web sockets.
+Most Odin commands use the [REST API](api.md) to communicate.
 
 
 ### Authentication and Users
