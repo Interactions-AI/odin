@@ -4,4 +4,4 @@ python_dateutil == 2.6.0
 setuptools >= 21.0.0
 jsonschema == 3.2.0
 openapi-spec-validator == 0.2.9
-pynvml == 8.0.4
+pynvml == 11.4.1
