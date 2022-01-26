@@ -597,12 +597,16 @@ def task_to_pod_spec(  # pylint: disable=too-many-locals
     affinity = None
     if task.node_pref:
         expressions = []
+        # Allow
+        # node_pref:
+        #   100
+        weight = max(1, min(100, int(task.node_pref.pop('weight', 1))))
         for key, value in task.node_pref.items():
             values = value.split('|')
             aff_reqmt = client.V1NodeSelectorRequirement(key=key, operator="In", values=values)
             expressions.append(aff_reqmt)
         selector = client.V1NodeSelectorTerm(match_expressions=expressions)
-        pref = client.V1PreferredSchedulingTerm(weight=1, preference=selector)
+        pref = client.V1PreferredSchedulingTerm(weight=weight, preference=selector)
         node_affinity = client.V1NodeAffinity(preferred_during_scheduling_ignored_during_execution=[pref])
         affinity = client.V1Affinity(node_affinity=node_affinity)
     regcred = client.V1LocalObjectReference(name='registry')
