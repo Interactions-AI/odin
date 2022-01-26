@@ -102,6 +102,7 @@ class Task:
         security_context: Optional[SecurityContext] = None,
         pull_policy: str = 'IfNotPresent',
         node_selector: Optional[Dict[str, str]] = None,
+        node_pref: Optional[Dict[str, str]] = None,
         resource_type: str = "Pod",
         num_workers: int = 1,
         inputs: Optional[List[str]] = None,
@@ -120,6 +121,7 @@ class Task:
         :param num_gpus: The number of GPUs requested for this task
         :param pull_policy: pull policy, defaults to `IfNotPresent`
         :param node_selector: This is a list of labels that can be used to select a specific node
+        :param node_pref: This is a list of labels that can be used to specify node preference
         :param resource_type: The resource type (defaults to "Pod")
         :param num_workers: If this is a distributed job (e.g TFJob), how many workers
         :param inputs: Data artifacts that this job consumes.
@@ -137,6 +139,7 @@ class Task:
         self.security_context = security_context
         self.pull_policy = pull_policy
         self.node_selector = node_selector
+        self.node_pref = node_pref
         self.resource_type = resource_type
         self.num_workers = num_workers
         self.inputs = inputs
@@ -177,6 +180,7 @@ class Task:
             security_context,
             dict_value.get('pull_policy', 'IfNotPresent'),
             dict_value.get('node_selector'),
+            dict_value.get('node_pref'),
             dict_value.get('resource_type', "Pod"),
             dict_value.get('num_workers', 1),
             dict_value.get('inputs'),
@@ -579,7 +583,28 @@ def task_to_pod_spec(  # pylint: disable=too-many-locals
         )
 
     selector = task.node_selector if task.node_selector else None
+    #affinity:
+    # nodeAffinity:
+    #  preferredDuringSchedulingIgnoredDuringExecution:
+    #  - weight: 1
+    #    preference:
+    #    matchExpressions:
+    #    - key: disktype
+    #      operator: In
+    #      values:
+    #      - ssd
 
+    affinity = None
+    if task.node_pref:
+        expressions = []
+        for key, value in task.node_pref.items():
+            values = value.split('|')
+            aff_reqmt = client.V1NodeSelectorRequirement(key=key, operator="In", values=values)
+            expressions.append(aff_reqmt)
+        selector = client.V1NodeSelectorTerm(match_expressions=expressions)
+        pref = client.V1PreferredSchedulingTerm(weight=1, preference=selector)
+        node_affinity = client.V1NodeAffinity(preferred_during_scheduling_ignored_during_execution=[pref])
+        affinity = client.V1Affinity(node_affinity=node_affinity)
     regcred = client.V1LocalObjectReference(name='registry')
     pod_spec = client.V1PodSpec(
         containers=[container],
@@ -587,6 +612,7 @@ def task_to_pod_spec(  # pylint: disable=too-many-locals
         image_pull_secrets=[regcred],
         volumes=volumes if volumes else None,
         node_selector=selector,
+        affinity=affinity,
         restart_policy=ResourceHandler.RESTART_NEVER,
     )
     return pod_spec
