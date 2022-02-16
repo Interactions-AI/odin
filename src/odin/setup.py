@@ -48,8 +48,9 @@ setup(
             'odin-chores = odin.chores:main',
             'odin-select-model = odin.model.selector:main',
             'odin-serve = odin.serve:main',
-            'yaml2json = odin.utils.yaml:main',
-            'json2yaml = odin.utils.yaml:json_main',
+            'yaml2json = odin.utils.yaml_utils:main',
+            'render-jinja2 = odin.utils.render:main',
+            'json2yaml = odin.utils.yaml_utils:json_main',
         ]
     },
 )
