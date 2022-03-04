@@ -1,6 +1,7 @@
 import glob
 import requests
 import time
+import asyncio
 from shutil import copyfile
 import yaml
 from shortid import ShortId
@@ -219,7 +220,10 @@ def _add_to_job_repo(filename: str, message: str = None) -> str:
 
 @app.get("/app")
 async def read_main(request: Request):
-    response = await _ping_ws_server(get_ws_url())
+    try:
+        response = await asyncio.wait_for(_ping_ws_server(get_ws_url()), timeout=3.0)
+    except Exception:
+        response = "unresponsive"
     repo = git.Repo(ODIN_FS_ROOT)
     repo = set_repo_creds(repo)
     return {
