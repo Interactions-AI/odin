@@ -14,7 +14,7 @@ from typing import Dict, Union, Optional, List, Tuple, Any
 
 from baseline.utils import read_config_file, str2bool, listify, import_user_module, idempotent_append
 from odin import Path
-from odin.utils.yaml import write_yaml
+from odin.utils.yaml_utils import write_yaml
 
 
 LOGGER = logging.getLogger('odin')
