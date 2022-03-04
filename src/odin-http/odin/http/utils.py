@@ -90,6 +90,20 @@ async def _submit_job(ws, work) -> None:
         return _pipe_id
 
 
+async def _ping_ws_server(uri: str):
+    """Ping odin at uri and send message.
+
+    :param uri: The location of the server
+    :return a status
+    """
+    async with websockets.connect(uri) as websocket:
+        msg = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+        await websocket.send(json.dumps({APIField.COMMAND: 'PING', APIField.REQUEST: msg}))
+        resp = json.loads(await websocket.recv())
+        if resp[APIField.STATUS] == APIStatus.ERROR:
+            return f"unresponsive ({msg})"
+        return f"responsive ({msg})"
+
 async def _request_status(ws, work):
     """Request the status of a job from the server."""
     pipe_statuses = []
