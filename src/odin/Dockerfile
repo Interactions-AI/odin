@@ -44,7 +44,7 @@ RUN python3.6 -m pip install pylint
 #RUN pylint --persistent=n ./odin
 
 # TODO run tests/etc.
-RUN pytest /usr/odin/tests
+RUN pytest --ignore=/usr/odin/tests/test_podspecs.py /usr/odin/tests
 # Set terminal encodings
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
