@@ -97,6 +97,16 @@ class PipelineResults(Model):
     pipelines: List[PipelineDefinition] = []
 
 
+
+class UserJobsDefinition(Model):
+    username: str
+    jobs: List[str] = None
+
+
+class UserJobsWrapperDefinition(Model):
+    user_job: Optional[UserJobsDefinition] = None
+
+
 class PipelineCleanupDefinition(Model):
     task_id: str
     cleaned_from_k8s: Optional[bool] = True

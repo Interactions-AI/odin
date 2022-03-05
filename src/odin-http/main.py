@@ -256,6 +256,11 @@ def _user_def(user: User) -> UserDefinition:
     return UserDefinition(username=user.username, firstname=user.firstname, lastname=user.lastname)
 
 
+def _user_jobs_def(user: User) -> UserJobsDefinition:
+    return UserJobsDefinition(username=user.username, firstname=user.firstname, lastname=user.lastname, jobs=[j.handle for j in user.job_refs])
+
+
+
 def _get_job_files(job_loc):
     configs = []
     job_dir = os.path.dirname(job_loc)
@@ -311,6 +316,12 @@ def get_user(user_id: str) -> UserWrapperDefinition:
     user = dao.get_user(user_id)
     user_def = _user_def(user)
     return UserWrapperDefinition(user=user_def)
+
+@app.get("/users/{user_id}/jobs")
+def get_user(user_id: str) -> UserJobsWrapperDefinition:
+    user = dao.get_user(user_id)
+    user_jobs_def = _user_jobs_def(user)
+    return UserJobsWrapperDefinition(user_job=user_jobs_def)
 
 
 @app.post("/users")

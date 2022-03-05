@@ -94,6 +94,16 @@ class Dao:
         return self.Session()
 
 
+
+class JobRef(Base):
+    __tablename__ = 'job_refs'
+    id = sql.Column(sql.Integer, primary_key=True)
+    # This is going to be the name in the jobs_db
+    handle = sql.Column(sql.String(255), unique=True)
+    user_id = sql.Column(sql.Integer, sql.ForeignKey('users.id'))
+    user = sql_orm.relationship("User", back_populates="job_refs")
+
+
 class User(Base):
 
     __tablename__ = 'users'
@@ -101,8 +111,8 @@ class User(Base):
     username = sql.Column(sql.String(255), unique=True)
     firstname = sql.Column(sql.String(255), unique=True)
     lastname = sql.Column(sql.String(255), unique=True)
-
     password_hash = sql.Column(sql.LargeBinary(128))
+    job_refs = sql_orm.relationship('JobRef', back_populates='user')
 
     @property
     def password(self):
