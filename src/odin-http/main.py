@@ -1,6 +1,7 @@
 import glob
 import requests
 import time
+import asyncio
 from shutil import copyfile
 import yaml
 from shortid import ShortId
@@ -19,6 +20,7 @@ from odin.http.orm import *
 from odin.http.utils import (
     _convert_to_path,
     set_repo_creds,
+    _ping_ws_server,
     _request_status,
     _submit_job,
     _request_cleanup,
@@ -217,14 +219,18 @@ def _add_to_job_repo(filename: str, message: str = None) -> str:
 
 
 @app.get("/app")
-def read_main(request: Request):
+async def read_main(request: Request):
+    try:
+        response = await asyncio.wait_for(_ping_ws_server(get_ws_url()), timeout=3.0)
+    except Exception:
+        response = "unresponsive"
     repo = git.Repo(ODIN_FS_ROOT)
     repo = set_repo_creds(repo)
-
     return {
         "pipelines_root": ODIN_FS_ROOT,
         "pipelines_version": str(git.repo.fun.rev_parse(repo, f'origin/{PIPELINES_MAIN}')),
         "pipelines_repo_dirty": bool(repo.is_dirty()),
+        "ws_server_status": str(response),
     }
 
 
