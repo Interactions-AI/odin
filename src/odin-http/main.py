@@ -4,7 +4,7 @@ import time
 from shutil import copyfile
 import yaml
 from shortid import ShortId
-from fastapi import FastAPI, Depends, Body, Request
+from fastapi import FastAPI, Depends, Body, Request, status, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from jinja2 import Template
 from kubernetes import client, config
@@ -380,13 +380,31 @@ async def get_pipelines(q: Optional[str] = None) -> PipelineResults:
     return s
 
 
+async def _get_current_user(token: str = Depends(oauth2_scheme)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+        user = dao.get_user(username)
+        return user
+    except jwt.JWTError:
+        raise credentials_exception
+
 @app.post("/pipelines")
 async def create_pipeline(pipe_def: PipelineWrapperDefinition, token: str=Depends(oauth2_scheme)) -> PipelineWrapperDefinition:
+    user: User = await _get_current_user(token)
     job = _convert_to_path(pipe_def.pipeline.job)
     _update_job_repo()
     if _is_template(job):
         job = _substitute_template(job, pipe_def.context or {})
     pipe_id = await _submit_job(get_ws_url(), job)
+    dao.create_job_ref(user, pipe_id)
     p = PipelineDefinition(name=pipe_id, id=pipe_id, job=job)
     return PipelineWrapperDefinition(pipeline=p)
 
