@@ -1,5 +1,4 @@
-# jessie wasn't able to use apt-get
-FROM python:3.6.4-stretch
+FROM python:3.7
 
 # Install tools
 RUN apt-get update && \
@@ -16,9 +15,9 @@ RUN cd /opt/git-lfs && \
     git lfs install
 ########################################################################
 
-RUN python3.6 -m pip install --upgrade pip && \
-    python3.6 -m pip install setuptools && \
-    python3.6 -m pip install pytest 
+RUN python -m pip install --upgrade pip && \
+    python -m pip install setuptools && \
+    python -m pip install pytest 
 
 # Copy project over
 WORKDIR /usr/odin
@@ -29,10 +28,10 @@ COPY setup.py ./setup.py
 COPY odin/version.py ./odin/version.py
 COPY . .
 # this layer should get cached, making builds faster
-RUN python3.6 -m pip install .
+RUN python -m pip install .
 
 # Install baseline
-RUN python3.6 -m pip install mead-baseline && python3.6 -m pip install mead-xpctl-client
+RUN python -m pip install mead-baseline && python -m pip install mead-xpctl-client
 
 # Install hpctl
 ADD https://github.com/mead-ml/hpctl/archive/master.tar.gz /usr/odin/hpctl-master.tar.gz
@@ -40,7 +39,7 @@ RUN tar xzf hpctl-master.tar.gz && \
     cd ./hpctl-master/ && \
     pip install -e .
 
-RUN python3.6 -m pip install pylint
+RUN python -m pip install pylint
 #RUN pylint --persistent=n ./odin
 
 # TODO run tests/etc.
