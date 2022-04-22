@@ -17,9 +17,18 @@ from eight_mile.utils import listify
 from baseline.utils import optional_params, import_user_module
 from odin import LOGGER
 from odin.store import Store
-
+from dataclasses import dataclass
 
 ConfigMap = namedtuple('ConfigMap', 'path name sub_path')
+
+
+@dataclass
+class EphemeralVolume:
+    name: str
+    type: str
+    medium: str
+    size_limit: Optional[str] = None
+
 
 HASH_TRAILING = '-hash'
 CORE_MODULES = ['odin.handlers.job', 'odin.handlers.deployment', 'odin.handlers.service', 'odin.handlers.pod']
@@ -55,7 +64,6 @@ SSH_MODE = 0o400
 ODIN_TASK_ENV = "ODIN_TASK_ID"
 ODIN_CRED_ENV = "ODIN_CRED"
 
-
 Secret.__new__.__defaults__ = ("", DEFAULT_MODE)
 
 
@@ -84,9 +92,17 @@ def populate_config_map(config_map_values: Dict) -> ConfigMap:
     return ConfigMap(**config_map_values)
 
 
-class Task:
-    """An object that contains enough info to run in k8s
+def populate_ephem_volume(ephem_volume: Dict) -> ConfigMap:
+    """Populate an ephemeral volume from a dictionary
+
+    :param config_map_values: A dictionary of values
+    :return: An ephemeral volume
     """
+    return EphemeralVolume(**ephem_volume)
+
+
+class Task:
+    """An object that contains enough info to run in k8s"""
 
     def __init__(
         self,
@@ -106,6 +122,7 @@ class Task:
         num_workers: int = 1,
         inputs: Optional[List[str]] = None,
         outputs: Optional[List[str]] = None,
+        ephem_volumes: Optional[List[EphemeralVolume]] = None,
     ):
         """Constructor
 
@@ -124,6 +141,7 @@ class Task:
         :param num_workers: If this is a distributed job (e.g TFJob), how many workers
         :param inputs: Data artifacts that this job consumes.
         :param outputs: The data artifacts that this job will generate.
+        :param ephem_volumes: An optional list of ephemeral volumes
         """
         self.name = name
         self.image = image
@@ -141,6 +159,7 @@ class Task:
         self.num_workers = num_workers
         self.inputs = inputs
         self.outputs = outputs
+        self.ephem_volumes = ephem_volumes
 
     @classmethod
     def from_dict(cls, dict_value: Dict) -> 'Job':
@@ -150,20 +169,27 @@ class Task:
         :returns: A job instance based on data inside the dictionary.
         """
         mounts = dict_value.get('mount', dict_value.get('mounts'))
-        mounts = [Volume(m['path'], m['name'], m['claim']) for m in listify(mounts)] if mounts is not None else None
+        mounts = [Volume(m['path'], m['name'], m.get('claim')) for m in listify(mounts)] if mounts is not None else None
         cpu_req = dict_value.get('cpu')
-        cpu_req = Cpu(cpu_req.get('limits'),
-                cpu_req.get('requests')) if cpu_req is not None else None
+        cpu_req = Cpu(cpu_req.get('limits'), cpu_req.get('requests')) if cpu_req is not None else None
         security_context = dict_value.get('security_context')
-        security_context = SecurityContext(
+        security_context = (
+            SecurityContext(
                 security_context.get('fs_group'),
                 security_context.get('run_as_group'),
-                security_context.get('run_as_user')) if security_context is not None else None
+                security_context.get('run_as_user'),
+            )
+            if security_context is not None
+            else None
+        )
         secrets = dict_value.get('secret', dict_value.get('secrets'))
         secrets = [populate_secret(s) for s in listify(secrets)] if secrets is not None else None
         config_maps = dict_value.get('config_map', dict_value.get('config_maps'))
         config_maps = [populate_config_map(cm) for cm in listify(config_maps)] if config_maps is not None else None
-
+        ephem_volumes = dict_value.get('ephem_volume', dict_value.get('ephem_volumes'))
+        ephem_volumes = (
+            [populate_ephem_volume(ev) for ev in listify(ephem_volumes)] if ephem_volumes is not None else None
+        )
         return Task(
             dict_value['name'],
             dict_value['image'],
@@ -181,6 +207,7 @@ class Task:
             dict_value.get('num_workers', 1),
             dict_value.get('inputs'),
             dict_value.get('outputs'),
+            ephem_volumes,
         )
 
 
@@ -189,12 +216,10 @@ class SubmitError(ValueError):
 
 
 class TaskManager:
-    """Base interface for managing tasks
-    """
+    """Base interface for managing tasks"""
 
     def __init__(self):
-        """Base init for a scheduler
-        """
+        """Base init for a scheduler"""
 
     def submit(self, task: Task, **kwargs) -> str:
         """Submit something to k8s
@@ -244,8 +269,7 @@ class TaskManager:
 
 
 class ResourceHandler:
-    """Handler for a resource type
-    """
+    """Handler for a resource type"""
 
     PHASE_SUCCEEDED = 'Succeeded'
     PHASE_RUNNING = 'Running'
@@ -414,9 +438,7 @@ class ResourceHandler:
 
 
 class StatusType(Enum):
-    """General purpose mapping of Status onto an object, irrespective of ResourceType
-
-    """
+    """General purpose mapping of Status onto an object, irrespective of ResourceType"""
 
     RUNNING = "RUNNING"
     FAILED = "FAILED"
@@ -508,15 +530,10 @@ def task_to_pod_spec(  # pylint: disable=too-many-locals
     """Convert this job into a POD spec that a k8s scheduler can run
 
     :param task: name for this task
-    :type task: Task
     :param container_name: name for the container if None, it will be the job name
-    :type container_name: Optional[str]
     :param secrets: A list of secrets to inject into the container.
-    :type secrets: Optional[List[Secret]]
     :param configmaps: A list of configmaps to inject.
-    :type configmaps: Optional[List[ConfigMap]]
     :returns: A PodSpec in the k8s client API
-    :rtype: client.V1PodSpec
     """
     limits = {}
     requests = {}
@@ -559,11 +576,28 @@ def task_to_pod_spec(  # pylint: disable=too-many-locals
         ],
     )
 
+    # Handle inline volumes first
     volumes = []
+    if task.ephem_volumes:
+        for ephem_volume in task.ephem_volumes:
+            if ephem_volume.type != 'emptyDir':
+                raise Exception("Only emptyDir ephemeral volumes are currently supported!")
+            volumes.append(
+                client.V1Volume(
+                    name=ephem_volume.name,
+                    empty_dir=client.V1EmptyDirVolumeSource(
+                        medium=ephem_volume.medium, size_limit=ephem_volume.size_limit
+                    ),
+                )
+            )
     if task.mounts is not None:
         for mount in task.mounts:
-            pvc = client.V1PersistentVolumeClaimVolumeSource(claim_name=mount.claim)
-            volumes.append(client.V1Volume(name=mount.name, persistent_volume_claim=pvc))
+            # If there is a claim, its a persistent volume
+            if mount.claim:
+                pvc = client.V1PersistentVolumeClaimVolumeSource(claim_name=mount.claim)
+                volumes.append(client.V1Volume(name=mount.name, persistent_volume_claim=pvc))
+            # Must be ephemeral (for now anyway)
+
     if secrets is not None:
         secrets = {s.name: s for s in secrets}
         volumes.extend(
@@ -593,8 +627,7 @@ def task_to_pod_spec(  # pylint: disable=too-many-locals
 
 
 class KubernetesTaskManager(TaskManager):
-    """`TaskManager` implementation to use k8s to schedule
-    """
+    """`TaskManager` implementation to use k8s to schedule"""
 
     def __init__(self, store: Store, namespace: str = 'default', modules: List[str] = DEFAULT_MODULES):
         """Create a Pod scheduler
@@ -721,7 +754,7 @@ class KubernetesTaskManager(TaskManager):
         all_logs = [prefix] if prefix else []
         for pod in pods:
             logs = api.read_namespaced_pod_log(pod, namespace=self.namespace, **args)
-            all_logs.append(f"{'='*16}\n{pod}\n{'-'*16}\n{logs}")
+            all_logs.append(f"{'=' * 16}\n{pod}\n{'-' * 16}\n{logs}")
         return '\n'.join(all_logs)
 
     def _find_resources(self, task: str) -> List[Tuple[str, str]]:
@@ -739,9 +772,13 @@ class KubernetesTaskManager(TaskManager):
             prefix, resource = task.split('/')
             prefix = prefix.lower()
             if prefix in ('svc', 'service'):
-                return [('svc', resource),]
+                return [
+                    ('svc', resource),
+                ]
             if prefix in ('deploy', 'deployment'):
-                return [('deploy', resource),]
+                return [
+                    ('deploy', resource),
+                ]
 
         try:
             job_entry = self.store.get(task)
@@ -754,9 +791,13 @@ class KubernetesTaskManager(TaskManager):
             # If the resource is missing from the job db we assume it some thing the user
             # figured out like the `${PyTorchJob_ID}-worker-0`. This lets us get logs
             # from arbitrary resources on the cluster
-            return [('Pod', task),]
+            return [
+                ('Pod', task),
+            ]
 
-        return [(job_entry.get(Store.RESOURCE_TYPE, 'Pod'), job_entry[Store.RESOURCE_ID]),]
+        return [
+            (job_entry.get(Store.RESOURCE_TYPE, 'Pod'), job_entry[Store.RESOURCE_ID]),
+        ]
 
     def find_resource_names(self, task: str) -> List[str]:
         """Find possible pods that we could get logs from.

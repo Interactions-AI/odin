@@ -1,0 +1,150 @@
+{
+  "active_deadline_seconds": null,
+  "affinity": null,
+  "automount_service_account_token": null,
+  "containers": [
+    {
+      "args": [
+        "--datasets",
+        "RANDOM_ROOT/datasets.yml",
+        "--config",
+        "RANDOM_WORK/sst2.json",
+        "--reporting",
+        "xpctl",
+        "--xpctl:label",
+        "test-job-xxxx--train-sst2-1"
+      ],
+      "command": [
+        "mead-train"
+      ],
+      "env": [
+        {
+          "name": "ODIN_TASK_ID",
+          "value": "test-job-xxxx--train-sst2-1",
+          "value_from": null
+        },
+        {
+          "name": "ODIN_CRED",
+          "value": "/etc/odind/odin-cred.yml",
+          "value_from": null
+        }
+      ],
+      "env_from": null,
+      "image": "mead-ml/mead-gpu:latest",
+      "image_pull_policy": "IfNotPresent",
+      "lifecycle": null,
+      "liveness_probe": null,
+      "name": "xxyy",
+      "ports": null,
+      "readiness_probe": null,
+      "resources": {
+        "limits": {
+          "nvidia.com/gpu": 1
+        },
+        "requests": {}
+      },
+      "security_context": null,
+      "startup_probe": null,
+      "stdin": null,
+      "stdin_once": null,
+      "termination_message_path": null,
+      "termination_message_policy": null,
+      "tty": null,
+      "volume_devices": null,
+      "volume_mounts": [
+        {
+          "mount_path": "/data",
+          "mount_propagation": null,
+          "name": "data",
+          "read_only": null,
+          "sub_path": null,
+          "sub_path_expr": null
+        }
+      ],
+      "working_dir": null
+    }
+  ],
+  "dns_config": null,
+  "dns_policy": null,
+  "enable_service_links": null,
+  "ephemeral_containers": null,
+  "host_aliases": null,
+  "host_ipc": null,
+  "host_network": null,
+  "host_pid": null,
+  "hostname": null,
+  "image_pull_secrets": [
+    {
+      "name": "registry"
+    }
+  ],
+  "init_containers": null,
+  "node_name": null,
+  "node_selector": null,
+  "os": null,
+  "overhead": null,
+  "preemption_policy": null,
+  "priority": null,
+  "priority_class_name": null,
+  "readiness_gates": null,
+  "restart_policy": "Never",
+  "runtime_class_name": null,
+  "scheduler_name": null,
+  "security_context": {
+    "fs_group": null,
+    "fs_group_change_policy": null,
+    "run_as_group": null,
+    "run_as_non_root": null,
+    "run_as_user": null,
+    "se_linux_options": null,
+    "seccomp_profile": null,
+    "supplemental_groups": null,
+    "sysctls": null,
+    "windows_options": null
+  },
+  "service_account": null,
+  "service_account_name": null,
+  "set_hostname_as_fqdn": null,
+  "share_process_namespace": null,
+  "subdomain": null,
+  "termination_grace_period_seconds": null,
+  "tolerations": null,
+  "topology_spread_constraints": null,
+  "volumes": [
+    {
+      "aws_elastic_block_store": null,
+      "azure_disk": null,
+      "azure_file": null,
+      "cephfs": null,
+      "cinder": null,
+      "config_map": null,
+      "csi": null,
+      "downward_api": null,
+      "empty_dir": null,
+      "ephemeral": null,
+      "fc": null,
+      "flex_volume": null,
+      "flocker": null,
+      "gce_persistent_disk": null,
+      "git_repo": null,
+      "glusterfs": null,
+      "host_path": null,
+      "iscsi": null,
+      "name": "data",
+      "nfs": null,
+      "persistent_volume_claim": {
+        "claim_name": "myclaim",
+        "read_only": null
+      },
+      "photon_persistent_disk": null,
+      "portworx_volume": null,
+      "projected": null,
+      "quobyte": null,
+      "rbd": null,
+      "scale_io": null,
+      "secret": null,
+      "storageos": null,
+      "vsphere_volume": null
+    }
+  ]
+}

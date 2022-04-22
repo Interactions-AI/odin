@@ -1,0 +1,99 @@
+{
+  "active_deadline_seconds": null,
+  "affinity": null,
+  "automount_service_account_token": null,
+  "containers": [
+    {
+      "args": [
+        "-c",
+        "print('hello test-job-xxxx--hello-python')"
+      ],
+      "command": [
+        "python3"
+      ],
+      "env": [
+        {
+          "name": "ODIN_TASK_ID",
+          "value": "test-job-xxxx--hello-python",
+          "value_from": null
+        },
+        {
+          "name": "ODIN_CRED",
+          "value": "/etc/odind/odin-cred.yml",
+          "value_from": null
+        }
+      ],
+      "env_from": null,
+      "image": "python:3.6.4-jessie",
+      "image_pull_policy": "IfNotPresent",
+      "lifecycle": null,
+      "liveness_probe": null,
+      "name": "xxyy",
+      "ports": null,
+      "readiness_probe": null,
+      "resources": {
+        "limits": {
+          "nvidia.com/gpu": 0
+        },
+        "requests": {}
+      },
+      "security_context": null,
+      "startup_probe": null,
+      "stdin": null,
+      "stdin_once": null,
+      "termination_message_path": null,
+      "termination_message_policy": null,
+      "tty": null,
+      "volume_devices": null,
+      "volume_mounts": null,
+      "working_dir": null
+    }
+  ],
+  "dns_config": null,
+  "dns_policy": null,
+  "enable_service_links": null,
+  "ephemeral_containers": null,
+  "host_aliases": null,
+  "host_ipc": null,
+  "host_network": null,
+  "host_pid": null,
+  "hostname": null,
+  "image_pull_secrets": [
+    {
+      "name": "registry"
+    }
+  ],
+  "init_containers": null,
+  "node_name": null,
+  "node_selector": null,
+  "os": null,
+  "overhead": null,
+  "preemption_policy": null,
+  "priority": null,
+  "priority_class_name": null,
+  "readiness_gates": null,
+  "restart_policy": "Never",
+  "runtime_class_name": null,
+  "scheduler_name": null,
+  "security_context": {
+    "fs_group": null,
+    "fs_group_change_policy": null,
+    "run_as_group": null,
+    "run_as_non_root": null,
+    "run_as_user": null,
+    "se_linux_options": null,
+    "seccomp_profile": null,
+    "supplemental_groups": null,
+    "sysctls": null,
+    "windows_options": null
+  },
+  "service_account": null,
+  "service_account_name": null,
+  "set_hostname_as_fqdn": null,
+  "share_process_namespace": null,
+  "subdomain": null,
+  "termination_grace_period_seconds": null,
+  "tolerations": null,
+  "topology_spread_constraints": null,
+  "volumes": null
+}

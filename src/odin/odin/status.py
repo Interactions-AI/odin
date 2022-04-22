@@ -77,4 +77,3 @@ def get_status(work: str, store: Store) -> Tuple[Pipeline, List[Row]]:
     job_names = parent_details[Store.WAITING]
     rows += ids2rows(job_names, Store.WAITING, store)
     return pipe, rows
-
