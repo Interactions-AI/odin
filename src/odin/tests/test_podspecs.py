@@ -17,6 +17,20 @@ YAML_CONFIG = """
 name: test-job
 tasks:
 
+- name: shm
+  image: blah:800000.6
+  command: stuff
+  args: []
+  mounts:
+   - name: data
+     path: "/data"
+     claim: "myclaim"
+   - path: /dev/shm
+     name: dshm
+  ephem_volumes:
+   - name: dshm
+     type: emptyDir
+     medium: Memory
 - name: train-sst2-2
   image: mead-ml/mead-gpu:1.3.0
   command: mead-train
@@ -79,8 +93,8 @@ tasks:
 """
 
 SRC_DIR = os.path.dirname(os.path.abspath(__file__))
-POD_0_PKL_PATH=f"{SRC_DIR}/test"
-POD_1_PKL_PATH=""
+
+import json
 
 def test_task_to_pod_specs():
     context, tasks = read_pipeline_config('RANDOM_WORK', 'RANDOM_ROOT', 'RANDOM_DATA', YAML_CONFIG, pipeline_id="xxxx")
@@ -90,12 +104,11 @@ def test_task_to_pod_specs():
         # pod_specs is type V1PodSpec
         pod_specs = task_to_pod_spec(task_obj, container_name="xxyy")
 
-        with open(f"{SRC_DIR}/test_pod_{idx}.pkl", 'rb') as ref_f:
-            ref_specs = pickle.load(ref_f)
-        assert ref_specs == pod_specs
-        #  return pod_specs
+        with open(f"{SRC_DIR}/test_pod_{idx}.json", 'r') as ref_f:
+            ref_specs = json.load(ref_f)
+        assert ref_specs == pod_specs.to_dict()
 
         # writes the reference
-        #  print(f"{SRC_DIR}")
-        #  with open(f"{SRC_DIR}/test_pod_{idx}.pkl", 'wb') as ref_f:
-        #      pickle.dump(pod_specs, ref_f)
+        #print(f"{SRC_DIR}")
+        #with open(f"{SRC_DIR}/test_pod_{idx}.json", 'w') as ref_f:
+        #    json.dump(pod_specs.to_dict(), ref_f)
