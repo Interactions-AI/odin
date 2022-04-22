@@ -102,28 +102,27 @@ def populate_ephem_volume(ephem_volume: Dict) -> ConfigMap:
 
 
 class Task:
-    """An object that contains enough info to run in k8s
-    """
+    """An object that contains enough info to run in k8s"""
 
     def __init__(
-            self,
-            name: str = None,
-            image: str = None,
-            command: Union[str, List[str]] = None,
-            args: List[str] = None,
-            mounts: Optional[List[Volume]] = None,
-            secrets: Optional[List[Secret]] = None,
-            config_maps: Optional[List[ConfigMap]] = None,
-            cpu: Optional[Cpu] = None,
-            num_gpus: int = None,
-            security_context: Optional[SecurityContext] = None,
-            pull_policy: str = 'IfNotPresent',
-            node_selector: Optional[Dict[str, str]] = None,
-            resource_type: str = "Pod",
-            num_workers: int = 1,
-            inputs: Optional[List[str]] = None,
-            outputs: Optional[List[str]] = None,
-            ephem_volumes: Optional[List[EphemeralVolume]] = None,
+        self,
+        name: str = None,
+        image: str = None,
+        command: Union[str, List[str]] = None,
+        args: List[str] = None,
+        mounts: Optional[List[Volume]] = None,
+        secrets: Optional[List[Secret]] = None,
+        config_maps: Optional[List[ConfigMap]] = None,
+        cpu: Optional[Cpu] = None,
+        num_gpus: int = None,
+        security_context: Optional[SecurityContext] = None,
+        pull_policy: str = 'IfNotPresent',
+        node_selector: Optional[Dict[str, str]] = None,
+        resource_type: str = "Pod",
+        num_workers: int = 1,
+        inputs: Optional[List[str]] = None,
+        outputs: Optional[List[str]] = None,
+        ephem_volumes: Optional[List[EphemeralVolume]] = None,
     ):
         """Constructor
 
@@ -172,20 +171,25 @@ class Task:
         mounts = dict_value.get('mount', dict_value.get('mounts'))
         mounts = [Volume(m['path'], m['name'], m.get('claim')) for m in listify(mounts)] if mounts is not None else None
         cpu_req = dict_value.get('cpu')
-        cpu_req = Cpu(cpu_req.get('limits'),
-                      cpu_req.get('requests')) if cpu_req is not None else None
+        cpu_req = Cpu(cpu_req.get('limits'), cpu_req.get('requests')) if cpu_req is not None else None
         security_context = dict_value.get('security_context')
-        security_context = SecurityContext(
-            security_context.get('fs_group'),
-            security_context.get('run_as_group'),
-            security_context.get('run_as_user')) if security_context is not None else None
+        security_context = (
+            SecurityContext(
+                security_context.get('fs_group'),
+                security_context.get('run_as_group'),
+                security_context.get('run_as_user'),
+            )
+            if security_context is not None
+            else None
+        )
         secrets = dict_value.get('secret', dict_value.get('secrets'))
         secrets = [populate_secret(s) for s in listify(secrets)] if secrets is not None else None
         config_maps = dict_value.get('config_map', dict_value.get('config_maps'))
         config_maps = [populate_config_map(cm) for cm in listify(config_maps)] if config_maps is not None else None
         ephem_volumes = dict_value.get('ephem_volume', dict_value.get('ephem_volumes'))
-        ephem_volumes = [populate_ephem_volume(ev) for ev in
-                         listify(ephem_volumes)] if ephem_volumes is not None else None
+        ephem_volumes = (
+            [populate_ephem_volume(ev) for ev in listify(ephem_volumes)] if ephem_volumes is not None else None
+        )
         return Task(
             dict_value['name'],
             dict_value['image'],
@@ -212,12 +216,10 @@ class SubmitError(ValueError):
 
 
 class TaskManager:
-    """Base interface for managing tasks
-    """
+    """Base interface for managing tasks"""
 
     def __init__(self):
-        """Base init for a scheduler
-        """
+        """Base init for a scheduler"""
 
     def submit(self, task: Task, **kwargs) -> str:
         """Submit something to k8s
@@ -267,8 +269,7 @@ class TaskManager:
 
 
 class ResourceHandler:
-    """Handler for a resource type
-    """
+    """Handler for a resource type"""
 
     PHASE_SUCCEEDED = 'Succeeded'
     PHASE_RUNNING = 'Running'
@@ -437,9 +438,7 @@ class ResourceHandler:
 
 
 class StatusType(Enum):
-    """General purpose mapping of Status onto an object, irrespective of ResourceType
-
-    """
+    """General purpose mapping of Status onto an object, irrespective of ResourceType"""
 
     RUNNING = "RUNNING"
     FAILED = "FAILED"
@@ -500,7 +499,7 @@ def find_bearer_token(api: client.CoreV1Api, svc_acc: str, namespace: str = 'def
 
 
 def get_custom_object_name(
-        api: client.CustomObjectsApi, name: str, group: str, version: str, plural: str, namespace: str = 'default'
+    api: client.CustomObjectsApi, name: str, group: str, version: str, plural: str, namespace: str = 'default'
 ) -> str:
     """Get the name generated by kubeflow for tf/pyt jobs.
 
@@ -523,10 +522,10 @@ def get_custom_object_name(
 
 
 def task_to_pod_spec(  # pylint: disable=too-many-locals
-        task: Task,
-        container_name: Optional[str] = None,
-        secrets: Optional[List[Secret]] = None,
-        configmaps: Optional[List[ConfigMap]] = None,
+    task: Task,
+    container_name: Optional[str] = None,
+    secrets: Optional[List[Secret]] = None,
+    configmaps: Optional[List[ConfigMap]] = None,
 ) -> client.V1PodSpec:
     """Convert this job into a POD spec that a k8s scheduler can run
 
@@ -583,9 +582,14 @@ def task_to_pod_spec(  # pylint: disable=too-many-locals
         for ephem_volume in task.ephem_volumes:
             if ephem_volume.type != 'emptyDir':
                 raise Exception("Only emptyDir ephemeral volumes are currently supported!")
-            volumes.append(client.V1Volume(name=ephem_volume.name,
-                                           empty_dir=client.V1EmptyDirVolumeSource(medium=ephem_volume.medium,
-                                                                                   size_limit=ephem_volume.size_limit)))
+            volumes.append(
+                client.V1Volume(
+                    name=ephem_volume.name,
+                    empty_dir=client.V1EmptyDirVolumeSource(
+                        medium=ephem_volume.medium, size_limit=ephem_volume.size_limit
+                    ),
+                )
+            )
     if task.mounts is not None:
         for mount in task.mounts:
             # If there is a claim, its a persistent volume
@@ -623,8 +627,7 @@ def task_to_pod_spec(  # pylint: disable=too-many-locals
 
 
 class KubernetesTaskManager(TaskManager):
-    """`TaskManager` implementation to use k8s to schedule
-    """
+    """`TaskManager` implementation to use k8s to schedule"""
 
     def __init__(self, store: Store, namespace: str = 'default', modules: List[str] = DEFAULT_MODULES):
         """Create a Pod scheduler
@@ -646,12 +649,12 @@ class KubernetesTaskManager(TaskManager):
         self.handlers = {k: create_resource_handler(k, namespace) for k in RESOURCE_HANDLERS.keys()}
 
     async def follow_logs(  # pylint: disable=missing-yield-type-doc,too-many-locals
-            self,
-            resource_name: str,
-            namespace: str = 'default',
-            container: Optional[str] = None,
-            lines: Optional[int] = None,
-            service_account: str = 'odin',
+        self,
+        resource_name: str,
+        namespace: str = 'default',
+        container: Optional[str] = None,
+        lines: Optional[int] = None,
+        service_account: str = 'odin',
     ) -> AsyncIterator[str]:
         """Stream the logs from a pod in an async way.
 
@@ -769,9 +772,13 @@ class KubernetesTaskManager(TaskManager):
             prefix, resource = task.split('/')
             prefix = prefix.lower()
             if prefix in ('svc', 'service'):
-                return [('svc', resource), ]
+                return [
+                    ('svc', resource),
+                ]
             if prefix in ('deploy', 'deployment'):
-                return [('deploy', resource), ]
+                return [
+                    ('deploy', resource),
+                ]
 
         try:
             job_entry = self.store.get(task)
@@ -784,9 +791,13 @@ class KubernetesTaskManager(TaskManager):
             # If the resource is missing from the job db we assume it some thing the user
             # figured out like the `${PyTorchJob_ID}-worker-0`. This lets us get logs
             # from arbitrary resources on the cluster
-            return [('Pod', task), ]
+            return [
+                ('Pod', task),
+            ]
 
-        return [(job_entry.get(Store.RESOURCE_TYPE, 'Pod'), job_entry[Store.RESOURCE_ID]), ]
+        return [
+            (job_entry.get(Store.RESOURCE_TYPE, 'Pod'), job_entry[Store.RESOURCE_ID]),
+        ]
 
     def find_resource_names(self, task: str) -> List[str]:
         """Find possible pods that we could get logs from.

@@ -8,8 +8,7 @@ from odin.k8s import Task, Status, ResourceHandler, StatusType, json_to_selector
 @register_resource_handler
 class MPIJobHandler(ResourceHandler):
 
-    """Resource handler for multi-worker MPI jobs
-    """
+    """Resource handler for multi-worker MPI jobs"""
 
     NAME = "MPIJob"
     GROUP = "kubeflow.org"

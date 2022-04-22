@@ -86,8 +86,7 @@ class MongoStore(Store):
     """
 
     def __init__(self, host, user, passwd, db='jobs_db', port=pymongo.MongoClient.PORT, **kwargs):
-        """A MongoStore is a Store implemented using MongoDB
-        """
+        """A MongoStore is a Store implemented using MongoDB"""
         super().__init__()
         self.dbhost = host
         if user and passwd:

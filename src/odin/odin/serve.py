@@ -196,8 +196,7 @@ def get_db_config(cred: Optional[str]) -> Dict:
 
 
 def main():
-    """Launch a websocket server that will run forever and serve pipelines
-    """
+    """Launch a websocket server that will run forever and serve pipelines"""
     global STORE
     global CACHE
     global ROOT_PATH

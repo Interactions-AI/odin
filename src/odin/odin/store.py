@@ -16,8 +16,7 @@ LOGGER = logging.getLogger('odin')
 
 
 class Store:
-    """Base interface for a job store
-    """
+    """Base interface for a job store"""
 
     JOBS = 'jobs'
     STATUS = 'status'
@@ -38,8 +37,7 @@ class Store:
     CACHED = 'Cached'
 
     def __init__(self):
-        """A Store is an abstract interface for talking to a job database
-        """
+        """A Store is an abstract interface for talking to a job database"""
 
     def get(self, job_id: str) -> Dict:
         """This gives back the result of the job store for this entry
@@ -122,12 +120,10 @@ class Store:
 
 
 class MemoryStore(Store):
-    """MemoryStore is a memory-backed store, mainly for testing
-    """
+    """MemoryStore is a memory-backed store, mainly for testing"""
 
     def __init__(self):
-        """Use a `Dict` to hold state locally
-        """
+        """Use a `Dict` to hold state locally"""
         super().__init__()
         self.db = {}
 

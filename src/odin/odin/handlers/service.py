@@ -7,8 +7,7 @@ from odin.k8s import ResourceHandler, json_to_selector, register_resource_handle
 
 @register_resource_handler(aliases=['svc'])
 class ServiceHandler(ResourceHandler):
-    """(partial) resource handler for k8s Services
-    """
+    """(partial) resource handler for k8s Services"""
 
     NAME = "Service"
 

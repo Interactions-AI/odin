@@ -332,8 +332,7 @@ class BestExporrPolicyMeadEvalXPCTL(ExperimentRepoExportPolicy):
 
 
 def main():  # pylint: disable=too-many-statements
-    """Select a model for export if one meets the criteria
-    """
+    """Select a model for export if one meets the criteria"""
     parser = argparse.ArgumentParser(description='Select a model for export if one meets the criteria')
     parser.add_argument('--cred', help='cred file', default="/etc/odind/odin-cred.yml")
     parser.add_argument('--type', help='Policy type', required=True)

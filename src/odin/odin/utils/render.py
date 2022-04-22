@@ -8,6 +8,7 @@ from eight_mile.downloads import open_file_or_url
 from mead.utils import parse_and_merge_overrides
 from shortid import ShortId
 import os.path
+
 SHORT_ID = ShortId()
 
 SUFFIX = '.yml.jinja2'
@@ -40,4 +41,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

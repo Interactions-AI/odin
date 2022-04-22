@@ -219,7 +219,11 @@ def _get_child_name(parent_name: str, name: str) -> str:
 
 
 def read_pipeline_config(  # pylint: disable=too-many-locals
-        work_dir: str, root_dir: str, data_dir: Optional[str] = None, main_file: Optional[str] = None, pipeline_id: Optional[str] = None
+    work_dir: str,
+    root_dir: str,
+    data_dir: Optional[str] = None,
+    main_file: Optional[str] = None,
+    pipeline_id: Optional[str] = None,
 ) -> Tuple[Dict, List[Dict]]:
     """Read in the pipeline configuration from a directory
 

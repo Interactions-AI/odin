@@ -677,7 +677,10 @@ def generate_pipeline(  # pylint: disable=too-many-locals,too-many-branches,too-
 
 
 def get_images(
-    template_loc: Path, mead: Optional[str] = None, odin: Optional[str] = None, claim: Optional[str] = None,
+    template_loc: Path,
+    mead: Optional[str] = None,
+    odin: Optional[str] = None,
+    claim: Optional[str] = None,
 ) -> Tuple[Dict[str, str], Dict[str, str]]:
     """Get image names with a fallback to the images file."""
     defaults = read_config_file(os.path.join(template_loc, 'images.yml'))
