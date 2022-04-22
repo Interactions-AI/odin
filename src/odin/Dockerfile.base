@@ -1,8 +1,7 @@
-# Python 3.6
-FROM python:3.6.4-stretch
+FROM python:3.7
 
 # Setup Env
-RUN python3.6 -m pip install --upgrade pip
+RUN python -m pip install --upgrade pip
 
 # Copy over all the odin code
 WORKDIR /usr/odin
@@ -11,10 +10,10 @@ COPY odin/version.py ./odin/version.py
 COPY . .
 
 # Install Odin
-RUN python3.6 -m pip install .
+RUN python -m pip install .
 
 # Install baseline
-RUN python3.6 -m pip install mead-baseline && python3.6 -m pip install mead-xpctl-client
+RUN python -m pip install mead-baseline && python -m pip install mead-xpctl-client
 
 # Install hpctl
 ADD https://github.com/mead-ml/hpctl/archive/master.tar.gz /usr/odin/hpctl-master.tar.gz
