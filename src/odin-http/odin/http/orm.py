@@ -2,7 +2,7 @@ import os
 import sqlalchemy as sql
 import sqlalchemy.orm as sql_orm
 from sqlalchemy.ext.declarative import declarative_base
-
+import datetime
 import bcrypt
 
 SECURITY_PASSWORD_SALT = os.environ.get('ODIN_SALT').encode("UTF-8")
@@ -66,6 +66,13 @@ class Dao:
         session.commit()
         return user
 
+    def create_job_ref(self, user: 'User', handle: str) -> 'JobRef':
+        session = self.Session()
+        job_ref = JobRef(handle=handle, user=user)
+        session.add(job_ref)
+        session.commit()
+        return job_ref
+
     def update_user(self, object):
         session = self.Session()
         user = session.query(User).filter(User.username == object.username).first()
@@ -94,6 +101,16 @@ class Dao:
         return self.Session()
 
 
+
+class JobRef(Base):
+    __tablename__ = 'job_refs'
+    id = sql.Column(sql.Integer, primary_key=True)
+    # This is going to be the name in the jobs_db
+    handle = sql.Column(sql.String(255), unique=True)
+    user_id = sql.Column(sql.Integer, sql.ForeignKey('users.id'))
+    user = sql_orm.relationship("User", back_populates="job_refs")
+    submit_time = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
+
 class User(Base):
 
     __tablename__ = 'users'
@@ -101,8 +118,8 @@ class User(Base):
     username = sql.Column(sql.String(255), unique=True)
     firstname = sql.Column(sql.String(255), unique=True)
     lastname = sql.Column(sql.String(255), unique=True)
-
     password_hash = sql.Column(sql.LargeBinary(128))
+    job_refs = sql_orm.relationship('JobRef', back_populates='user')
 
     @property
     def password(self):
