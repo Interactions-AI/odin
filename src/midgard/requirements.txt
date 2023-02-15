@@ -1,4 +1,4 @@
-werkzeug == 0.16.0
+werkzeug == 2.2.3
 connexion
 python_dateutil == 2.6.0
 setuptools >= 21.0.0
